@@ -1,0 +1,46 @@
+Solving 2x2 linear equation using Cramer's rule.
+From Eqn 1 enter coefficient for X:
+From Eqn 1 enter coefficient for Y:
+Enter RHS:
+From Eqn 2 enter coefficient for X:
+From Eqn 2 enter coefficient for Y:
+Enter RHS:
+
+Starting to solve the system of equation...
+  2x +   4y =  10
+  7x +   1y =   9
+Calculating the determinant as:
+| cx1   cy1 |
+|           |    = ( cx1*cy2 - cx2*cy1 )
+| cx2   cy2 |
+             
+|  2      4|
+|          |   = -26
+|  7      1|
+
+In the above equation the determinant is -26
+Next we calculate the determinant after column substitution.
+First replace the X column with RHS
+| rhs1   cy1 |
+|           |    = ( rhs1*cy2 - rhs2*cy1 )
+| rhs2   cy2 |
+             
+| 10      4|
+|          |   = -26
+|  9      1|
+
+Then divide this determinant by the coefficient determinant -26
+Therefore X = -26 / -26 = 1
+Next we calculate the determinant after column substitution.
+First replace the Y column with RHS
+| cx1   rhs1 |
+|           |    = ( cx1*rhs2 - cx2*rhs1 )
+| cx2   rhs2 |
+             
+|  2     10|
+|          |   = -52
+|  7      9|
+
+Then divide this determinant by the coefficient determinant -26
+Therefore Y = -52 / -26 = 2
+Solution is X = 1 Y = 2
