@@ -1,0 +1,12 @@
+# Example equation
+INORDER = i1 i2 i3 
+OUTORDER = O1 O2 
+n6 = ! i1 * i3 
+n7 = i1 * ! i3 
+n8 = ! n6 * !n7 
+O1 = ! i2 * !n8 
+n10 = ! i2 * i3 
+n11 = i2 * ! i3 
+n12 = ! n10 * !n11 
+O2 = ! i1 * !n12 
+
