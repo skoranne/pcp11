@@ -1,0 +1,223 @@
+////////////////////////////////////////////////////////////////////////////////
+// File    : function_arrangements.cpp
+// Author  : Sandeep Koranne (C) 2019. All rights reserved.
+//
+// Purpose : Understanding code logic for functions
+////////////////////////////////////////////////////////////////////////////////
+
+#include <cassert>
+#include <vector>
+#include <deque>
+#include <functional>
+#include <algorithm>
+#include <iostream>
+#include <string>
+#include <typeinfo>
+
+namespace CodeLogic
+{
+  class RelatedConcepts
+  {
+  public:
+    RelatedConcepts() = delete;
+    template <typename T>
+    static void InitializeDataStore(T&);
+  };
+} // end of namespace CodeLogic
+
+namespace DataStore
+{
+  enum class TypeStorage { INTEGER, CHAR, FLOAT };
+  class IntegerStore
+  {
+  public:
+    static constexpr bool is_a_data_store = true;
+    static constexpr TypeStorage type = TypeStorage::INTEGER;
+    IntegerStore() {}
+    void Init() { _data.clear(); }
+    IntegerStore( IntegerStore&& rhs ) : _data( rhs._data ) {
+      std::cout << __PRETTY_FUNCTION__ << std::endl;
+    }
+    IntegerStore& operator=( IntegerStore&& rhs ) {
+      if( this == &rhs ) return *this;
+      std::cout << __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
+      _data = std::move( rhs._data );
+      return (*this);
+    }
+    IntegerStore( const IntegerStore& ) = delete;
+    IntegerStore& operator=( const IntegerStore& ) = delete;
+  private:
+    std::deque<int> _data;
+  };
+
+  class FloatStore
+  {
+  public:
+    static constexpr bool is_a_data_store = true;
+    static constexpr TypeStorage type = TypeStorage::FLOAT;
+    FloatStore() {}
+    void Init() {}
+    FloatStore( FloatStore&& rhs ) {}
+    FloatStore( const FloatStore& ) = delete;
+    FloatStore& operator=( const FloatStore& ) = delete;
+  };
+
+} // end of DataStore namespace
+
+namespace CommonDataTypes
+{
+  using Indices = std::vector<unsigned long>;
+  using OneDMesh  = std::vector<float>;
+  using TwoDMesh  = std::vector<OneDMesh>;
+  enum class NORM { L1, L2, LINF };
+  static void CheckCommonDataTypes();
+  double ComputeNorm( const OneDMesh&, NORM n );
+  double ComputeNorm( const TwoDMesh&, NORM n );
+};
+
+double CommonDataTypes::ComputeNorm( const OneDMesh& mesh, NORM n )
+{
+  switch( n ) {
+  case NORM::L2: {
+    double retval = 0.0;
+    for( unsigned int i=0; i < mesh.size(); ++i ) {
+      retval += mesh[i]*mesh[i];
+    }
+    retval = sqrt( retval );
+    return retval;
+  }
+  default: return 0.0;
+  }
+  return 0.0;
+}
+
+double CommonDataTypes::ComputeNorm( const TwoDMesh& mesh, NORM n )
+{
+  switch( n ) {
+  case NORM::L2: {
+    double retval = 0.0;
+    for( unsigned int i=0; i < mesh.size(); ++i ) {
+      for( unsigned int j=0; j < mesh[i].size(); ++j ) {
+	retval += mesh[i][j] * mesh[i][j];
+      }
+    }
+    retval = sqrt( retval );
+    return retval;
+  }
+  default: return 0.0;
+  }
+  return 0.0;
+}
+
+namespace FEMCommon
+{
+  using namespace CommonDataTypes;
+
+  class UnitSquare
+  {
+  private:
+    static constexpr unsigned int N = 16;
+  public:
+    using MeshFunction = std::function<double(double,double)>;
+    UnitSquare( unsigned int _MESH_SIZE = N): MESH_SIZE( _MESH_SIZE ) {
+      Init( MESH_SIZE );
+    }
+    unsigned int GetMeshSize(void) const { return MESH_SIZE; }
+    void Init( unsigned int );
+    void InitializeMesh( MeshFunction );
+    UnitSquare( const UnitSquare& ) = delete;
+    UnitSquare& operator=( const UnitSquare& ) = delete;
+    double ComputeNorm(NORM n=NORM::L2) const { return CommonDataTypes::ComputeNorm( mesh, n ); }
+  private:
+    unsigned int MESH_SIZE;
+    TwoDMesh mesh;
+  };
+} // end of FEMCommon namespace
+    
+void FEMCommon::UnitSquare::InitializeMesh( MeshFunction F )
+{
+  const double Y_STEP = 1.0d/MESH_SIZE;
+  for( unsigned int i=0; i < MESH_SIZE; ++i ) {
+    const double Y = i*Y_STEP;
+    const double X_STEP = 1.0d/mesh[i].size();
+    for( unsigned int j=0; j < mesh[i].size(); ++j ) {
+      const double X = j*X_STEP;
+      mesh[i][j] = F(X,Y);
+    }
+  }
+}
+
+
+void FEMCommon::UnitSquare::Init( unsigned int N ) 
+{
+  mesh.clear();
+  MESH_SIZE = N;
+  mesh.resize( N );
+  for( unsigned int i=0; i < N; ++i ) {
+    mesh[i].resize( N );
+    for( unsigned int j=0; j < N; ++j ) {
+      mesh[i][j] = 0.0;
+    }
+  }
+}
+
+void CommonDataTypes::CheckCommonDataTypes()
+{
+  std::cout << "OneDMesh = " << typeid( OneDMesh ).name() << std::endl;
+  std::cout << "sizeof( OneDMesh ) = " << sizeof( OneDMesh ) << std::endl;
+}
+
+template <typename T>
+void CodeLogic::RelatedConcepts::InitializeDataStore( T& dataStore )
+{
+  static_assert( T::is_a_data_store, "Type is not a data-store." );
+  dataStore.Init();
+}
+
+template <typename T>
+auto CheckConformance( const T&  ) -> decltype( T::is_a_data_store )
+{
+  return ( T::is_a_data_store );
+}
+
+template <typename T>
+std::string GetTypeString()
+{
+  return "UNKNOWN";
+}
+
+template <> std::string GetTypeString<bool>() { return "bool"; }
+
+static void TestTypeID()
+{
+  int X = 10;
+  std::cout << " X = " << X << " of type " << typeid( X ).name() << std::endl;
+}
+
+static void TestFEM()
+{
+  FEMCommon::UnitSquare SQ( 10 );
+  double X = SQ.ComputeNorm();
+  std::cout << "|SQ|_2 = " << X << std::endl;
+  SQ.InitializeMesh( [](double X, double Y){ return X*Y; } );
+  X = SQ.ComputeNorm();
+  std::cout << "|SQ|_2 = " << X << std::endl;
+}
+
+int main()
+{
+  TestFEM();
+  CommonDataTypes::CheckCommonDataTypes();
+  TestTypeID();
+  DataStore::IntegerStore IDS;
+  DataStore::IntegerStore IDS2 = std::move( IDS );
+  IDS = std::move( IDS2 );
+  decltype( IDS ) IDS3;
+  DataStore::FloatStore   FDS;
+  auto X = CheckConformance( IDS3 );
+  std::cout << " X = " << X << " of type " << GetTypeString< decltype( X )>() << std::endl;
+  std::cout << " X = " << X << " of type " << typeid( X ).name() << std::endl;
+  CodeLogic::RelatedConcepts::InitializeDataStore( IDS );
+  CodeLogic::RelatedConcepts::InitializeDataStore( FDS );
+  return( EXIT_SUCCESS );
+}
