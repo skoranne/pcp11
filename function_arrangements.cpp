@@ -13,6 +13,10 @@
 #include <iostream>
 #include <string>
 #include <typeinfo>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+//#include <ranges>
 
 namespace CodeLogic
 {
@@ -73,9 +77,9 @@ namespace CommonDataTypes
   static void CheckCommonDataTypes();
   double ComputeNorm( const OneDMesh&, NORM n );
   double ComputeNorm( const TwoDMesh&, NORM n );
-};
+}
 
-double CommonDataTypes::ComputeNorm( const OneDMesh& mesh, NORM n )
+[[nodiscard]] double CommonDataTypes::ComputeNorm( const OneDMesh& mesh, NORM n )
 {
   switch( n ) {
   case NORM::L2: {
@@ -83,7 +87,7 @@ double CommonDataTypes::ComputeNorm( const OneDMesh& mesh, NORM n )
     for( unsigned int i=0; i < mesh.size(); ++i ) {
       retval += mesh[i]*mesh[i];
     }
-    retval = sqrt( retval );
+    retval = std::sqrt( retval );
     return retval;
   }
   default: return 0.0;
@@ -93,8 +97,9 @@ double CommonDataTypes::ComputeNorm( const OneDMesh& mesh, NORM n )
 
 double CommonDataTypes::ComputeNorm( const TwoDMesh& mesh, NORM n )
 {
+  int X [[gnu::unused]] = 10;
   switch( n ) {
-  case NORM::L2: {
+  [[likely]] case NORM::L2: {
     double retval = 0.0;
     for( unsigned int i=0; i < mesh.size(); ++i ) {
       for( unsigned int j=0; j < mesh[i].size(); ++j ) {
@@ -136,10 +141,10 @@ namespace FEMCommon
     
 void FEMCommon::UnitSquare::InitializeMesh( MeshFunction F )
 {
-  const double Y_STEP = 1.0d/MESH_SIZE;
+  const double Y_STEP = 1.0/MESH_SIZE;
   for( unsigned int i=0; i < MESH_SIZE; ++i ) {
     const double Y = i*Y_STEP;
-    const double X_STEP = 1.0d/mesh[i].size();
+    const double X_STEP = 1.0/mesh[i].size();
     for( unsigned int j=0; j < mesh[i].size(); ++j ) {
       const double X = j*X_STEP;
       mesh[i][j] = F(X,Y);
@@ -204,8 +209,36 @@ static void TestFEM()
   std::cout << "|SQ|_2 = " << X << std::endl;
 }
 
+long double operator "" _g( long double d ) { return d*0.001; }
+long double operator "" _kg( long double d ) { return d;       }
+long double operator "" _pounds( long double d ) { return 1/2.25*d; }
+
+static void TestUserDefinedLiterals()
+{
+  long double total_weight = 1.2_g + 1.2_kg;
+  std::cout << " Total weight = " << total_weight << std::endl;
+}
+
+namespace MemoryPool
+{
+  class Allocator
+  {
+  };
+}
+
+static void TestByte()
+{
+  constexpr size_t N = 1024;
+  std::byte *p_plain = new std::byte[N];
+  std::unique_ptr< std::byte[] > MEM_ARRAY{new std::byte[N]};
+  for( size_t i=0; i < N; ++i ) MEM_ARRAY[i] = std::byte{0};
+  delete[] p_plain;
+}
+
 int main()
 {
+  TestUserDefinedLiterals();
+  TestByte();
   TestFEM();
   CommonDataTypes::CheckCommonDataTypes();
   TestTypeID();
