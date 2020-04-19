@@ -109,6 +109,11 @@ void Test3()
   DescribeOperations();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Function: IsSupportedInVerilog
+// We will later add cycle and gate count estimates for various widths
+//
+////////////////////////////////////////////////////////////////////////////////
 bool IsSupportedInVerilog( Example::Operations op )
 {
   using namespace Example;
