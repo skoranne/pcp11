@@ -135,6 +135,24 @@ bool IsSupportedInVerilog( Example::Operations op )
   return false;
 }
   
+size_t EstimateGateCount( Example::Operations op, size_t Width )
+{
+  if( IsSupportedInVerilog( op ) == false ) return 0;
+  switch( op ) {
+  case Example::Operations::ADD:
+    return Width*16;
+  case Example::Operations::SUB:
+    return Width*18;
+  case Example::Operations::MUL:
+    return Width*64;
+  case Example::Operations::LSH:
+  case Example::Operations::RSH:
+    return Width*2;
+  default:
+    return 0;
+  }
+  return 0;
+}
 
 std::mutex COUT_MUTEX;
 using LCK_GRD = std::lock_guard< std::mutex >;

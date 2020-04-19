@@ -1,0 +1,7 @@
+git branch -b NEW_BRANCH_NAME
+git checkout master
+git pull
+git checkout NEW_BRANCH_NAME
+git pull
+git push origin NEW_BRANCH_NAME
+git request-pull master ./ -p
