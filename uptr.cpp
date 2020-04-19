@@ -16,7 +16,7 @@
 #include <type_traits> // for POD stuff
 
 namespace Example {
-enum class Operations : int { NONE=0, ADD, SUB, MUL, DIV, MOD, EXP, LOG };
+  enum class Operations : int { NONE=0, ADD, SUB, MUL, DIV, MOD, EXP, LOG, LSH, RSH };
 int OperationsToInt( Operations );
 Operations IntToOperations( int );
 class Foo {
@@ -59,6 +59,8 @@ static void PrettyPrint( const char* name, int value )
   case Operations::MOD : return 5;
   case Operations::EXP : return 6;
   case Operations::LOG : return 7;
+  case Operations::LSH : return 8;
+  case Operations::RSH : return 9;
   default  : return (-1);
   }
   return (-1);
@@ -75,6 +77,8 @@ static void PrettyPrint( const char* name, int value )
   case 5: return Operations::MOD;
   case 6: return Operations::EXP;
   case 7: return Operations::LOG;
+  case 8: return Operations::LSH;
+  case 9: return Operations::RSH;
   default: return Operations::NONE;
   }
 }
@@ -90,6 +94,8 @@ static void DescribeOperations()
   PRINTER( Example::Operations::MOD );
   PRINTER( Example::Operations::EXP );
   PRINTER( Example::Operations::LOG );
+  PRINTER( Example::Operations::LSH );
+  PRINTER( Example::Operations::RSH );
 }
 #undef PRINTER
 
