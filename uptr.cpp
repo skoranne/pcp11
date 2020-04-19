@@ -109,6 +109,27 @@ void Test3()
   DescribeOperations();
 }
 
+bool IsSupportedInVerilog( Example::Operations op )
+{
+  using namespace Example;
+  switch( op ) {
+  case Operations::NONE: 
+  case Operations::DIV : 
+  case Operations::MOD :
+  case Operations::EXP :
+  case Operations::LOG :
+  default:
+    return false;
+  case Operations::ADD : 
+  case Operations::SUB : 
+  case Operations::MUL : 
+  case Operations::LSH : 
+  case Operations::RSH : 
+    return true;
+  }
+  return false;
+}
+  
 
 std::mutex COUT_MUTEX;
 using LCK_GRD = std::lock_guard< std::mutex >;
