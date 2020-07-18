@@ -13,10 +13,11 @@
 #include <iostream>
 #include <string>
 #include <typeinfo>
+#include <type_traits>
 #include <cmath>
-#include <cstddef>
+#include <cstddef> // for std::byte in C++-17
 #include <memory>
-//#include <ranges>
+//#include <ranges> // We are using C++-17 so cannot use ranges yet
 
 namespace CodeLogic
 {
@@ -235,6 +236,75 @@ static void TestByte()
   delete[] p_plain;
 }
 
+class DoesFunctionConsumeSpace
+{
+  using FN = std::function<double(double)>;
+private:
+  static FN compute;
+  double m_input;
+public:
+  //DoesFunctionConsumeSpace( double input ): compute{[](double x){return x*x;}},m_input{ input }  {}
+  DoesFunctionConsumeSpace( double input ): m_input{ input }  {}
+  double Run() const { return compute( m_input ); }
+};
+
+DoesFunctionConsumeSpace::FN DoesFunctionConsumeSpace::compute = [](double x) { return x*x;};
+
+template <typename T>
+class SourceData
+{
+public:
+  static constexpr bool IS_SOURCE = true;
+  using DATA_TYPE = T;
+  SourceData(T input): m_input{ input } {}
+  T get() const { return m_input; }
+protected:
+  T m_input;
+};
+
+template <typename T>
+class SinkData
+{
+public:
+  static constexpr bool IS_SINK = true;
+  using DATA_TYPE = T;  
+  SinkData() = default;
+  void put( T data ) const { std::cout << "Recvd. " << data << std::endl; }
+  void end() const { std::cout << "End." << std::endl; }
+};
+
+
+template <typename T, typename U, typename V, template<typename=U> class SourceData, template<typename=V> class SinkData>
+class ComputeUnit
+{
+  static_assert( std::is_same<typename SourceData<U>::DATA_TYPE, typename SinkData<V>::DATA_TYPE>::value, "Incompatible source/sink data types." );
+  using Source = SourceData<U>;
+  using Sink   = SinkData<V>;
+  static_assert( Source::IS_SOURCE, "Class is not a source of data." );
+  static_assert( Sink::IS_SINK, "Class is not a sink of data." );
+public:
+  ComputeUnit( const Source& source, const Sink& sink ): m_source{ source }, m_sink{ sink } {}
+  void Run() { m_sink.put( m_source.get() ); m_sink.end(); }
+protected:
+  const Source& m_source;
+  const Sink&   m_sink;
+};
+
+template <typename U> using S = SourceData<U>;
+template <typename V> using D = SinkData<V>;
+template <typename T> using COMPUTE = ComputeUnit<T,T,T,S,D>;
+static void TestComputeUnit()
+{
+  //using C = COMPUTE<int>;
+  using C = ComputeUnit<int,int,int,S,D>;
+  S<int> my_source{10};
+  D<int> my_dest;
+  C my_compute(my_source, my_dest);
+  my_compute.Run();
+}
+
+
+
 int main()
 {
   TestUserDefinedLiterals();
@@ -252,5 +322,9 @@ int main()
   std::cout << " X = " << X << " of type " << typeid( X ).name() << std::endl;
   CodeLogic::RelatedConcepts::InitializeDataStore( IDS );
   CodeLogic::RelatedConcepts::InitializeDataStore( FDS );
+  std::cout << "sizeof(DoesFunctionConsumeSpace) = " << sizeof(DoesFunctionConsumeSpace) << std::endl;
+  DoesFunctionConsumeSpace XDF{10};
+  std::cout << "Run := " << XDF.Run() << std::endl;
+  TestComputeUnit();
   return( EXIT_SUCCESS );
 }
