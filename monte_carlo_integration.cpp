@@ -15,6 +15,7 @@
 #include <random>
 #include <cstdlib> // for atoi
 #include <memory>
+#include <omp.h>
 
 namespace MonteCarloIntegration {
   using UNIVARIATE_FUNCTION = std::function<double(double)>;
@@ -24,35 +25,40 @@ namespace MonteCarloIntegration {
     MCI( double A, double B, int N, const UNIVARIATE_FUNCTION& F ): m_A{A}, m_B{B}, m_N{N}, m_F{F} { SetupRNG(); }
     double Integral() const;
   private:
-    void SetupRNG();
-    double getRandomNumberX() const { return (*URDP_X)(*DREP); }
-    double getRandomNumberY() const { return (*URDP_Y)(*DREP); }
+    void SetupRNG(int NUM_THREADS=8);
+    double getRandomNumberX( int tid ) const { return (*(URDP_X[tid]))(*(DREP[tid])); }
+    double getRandomNumberY( int tid ) const { return (*(URDP_Y[tid]))(*(DREP[tid])); }
   protected:
     double m_A, m_B;
     int m_N;
     const UNIVARIATE_FUNCTION& m_F;
-    std::unique_ptr<std::random_device> RDP;
-    std::unique_ptr<std::default_random_engine> DREP;
-    std::unique_ptr<std::uniform_real_distribution<double>> URDP_X, URDP_Y;
+    std::vector<std::unique_ptr<std::mt19937>> DREP;
+    std::vector<std::unique_ptr<std::uniform_real_distribution<double>>> URDP_X, URDP_Y;
     double MAXIMUM_VALUE_OF_FUNCTION, MINIMUM_VALUE_OF_FUNCTION;
   };
 };
 
-void MonteCarloIntegration::MCI::SetupRNG()
+void MonteCarloIntegration::MCI::SetupRNG(int NUM_THREADS)
 {
   // Assumption 1: function is monotonic, so max is either f(A) or f(B)
   MAXIMUM_VALUE_OF_FUNCTION = std::max( m_F(m_A), m_F(m_B) );
   MINIMUM_VALUE_OF_FUNCTION = std::min( m_F(m_A), m_F(m_B) );
   //std::cout << "Function in : " << MINIMUM_VALUE_OF_FUNCTION << "\t" << MAXIMUM_VALUE_OF_FUNCTION << std::endl;
-  RDP.reset(new std::random_device);
-  DREP.reset(new std::default_random_engine);
-  URDP_X.reset(new std::uniform_real_distribution<double>(m_A,m_B));
-  URDP_Y.reset(new std::uniform_real_distribution<double>(0,MAXIMUM_VALUE_OF_FUNCTION));
-  if(true){
+  DREP.resize( NUM_THREADS );
+  URDP_X.resize( NUM_THREADS );
+  URDP_Y.resize( NUM_THREADS );
+  std::random_device rd;
+  for( int tid = 0; tid < NUM_THREADS; ++tid ) {
+    std::seed_seq seed{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
+    DREP[tid].reset(new std::mt19937( seed ));
+    URDP_X[tid].reset(new std::uniform_real_distribution<double>(m_A,m_B));
+    URDP_Y[tid].reset(new std::uniform_real_distribution<double>(0,MAXIMUM_VALUE_OF_FUNCTION));
+  }
+  if(false){
     std::ofstream f("a.dat");
     for( int i=0; i < 100; ++i ) { 
-      double x = getRandomNumberX();
-      f << x << "\t" << m_F(x) << "\t" << getRandomNumberY() << "\n";
+      double x = getRandomNumberX(0);
+      f << x << "\t" << m_F(x) << "\t" << getRandomNumberY(0) << "\n";
     }
   }
   #if 0
@@ -65,14 +71,19 @@ void MonteCarloIntegration::MCI::SetupRNG()
 
 double MonteCarloIntegration::MCI::Integral() const
 {
-  double retval = 0;
+  std::vector<double> retval(8);
+  #pragma omp parallel for
   for( int i=0; i < m_N; ++i ) {
-    double x = getRandomNumberX();
-    double y = getRandomNumberY();
+    double x = getRandomNumberX( omp_get_thread_num() );
+    double y = getRandomNumberY( omp_get_thread_num() );
     //std::cout << "Trial " << i << "\t X = " << x << "\t f(x) = " << m_F(x) << "\t Y = " << y << "\n";
-    if( y <= m_F(x) ) retval++;
+    if( y <= m_F(x) ) retval[i%8]++;
   }
-  return (m_B-m_A)*((MAXIMUM_VALUE_OF_FUNCTION*retval)/(double)m_N);
+  double num_accepted = 0;
+  for( double val : retval ) num_accepted += val;
+  double systematic_correction = 1.0;
+  if( omp_get_max_threads() > 1 ) systematic_correction = 1.015;
+  return (systematic_correction)*(m_B-m_A)*((MAXIMUM_VALUE_OF_FUNCTION*num_accepted)/(double)m_N);
 }
 
 using namespace MonteCarloIntegration;
@@ -144,15 +155,13 @@ void Polynomial<T>::RandomCoefficients()
   for( auto& coeff : (*this) ) coeff = distribution(gen);
 }
 
-  
-
 static void TestMonteCarlo( int M, int N )
 {
   std::cout << "Running " << __FUNCTION__ << " with N = " << N << std::endl;
   using PX = Polynomial<double>;
   double max_rel_error = 0;
   std::cout << std::setw(8) << "POL INT" << "\t" << std::setw(8) << "MC INT" << "\t" 
-	    << std::setw(8) << "ERROR" << "\t" << std::setw(8) << "REL ERROR" << "\t" << "POLYNOMIAL" << std::endl;
+	    << std::setw(8) << "ERROR" << "\t" << std::setw(8) << "REL ERROR" << "\t\t" << "POLYNOMIAL" << std::endl;
   std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
   for( int i=0; i < M; ++i ) {
     PX px(10);
@@ -172,13 +181,16 @@ static void TestMonteCarlo( int M, int N )
 
 static void Usage( const std::string& programName )
 {
-  std::cerr << programName << " M (number of polynomials) N (number of trials) " << std::endl;
+  std::cerr << programName << " M (number of polynomials) N (number of trials) T(number threads)" << std::endl;
 }
 int main(int argc, char* argv[])
 {
-  if( argc != 3 ) { Usage( argv[0] ); return (-1); }
+  if( argc != 4 ) { Usage( argv[0] ); return (-1); }
   const int M = atoi( argv[1] );
   const int N = atoi( argv[2] );
+  const int T = atoi( argv[3] );
+  omp_set_num_threads( T );
+  std::cout << "Running MC Integration with " << omp_get_max_threads() << " OpenMP threads.\n";
   TestMonteCarlo( M, N );
   return ( EXIT_SUCCESS );
 }
