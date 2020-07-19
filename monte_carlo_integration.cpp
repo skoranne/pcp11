@@ -26,14 +26,14 @@ namespace MonteCarloIntegration {
     double Integral() const;
   private:
     void SetupRNG(int NUM_THREADS=8);
-    double getRandomNumberX( int tid ) const { return (*(URDP_X[tid]))(*(DREP[tid])); }
-    double getRandomNumberY( int tid ) const { return (*(URDP_Y[tid]))(*(DREP[tid])); }
+    double getRandomNumberX() const { return (*(URDP_X))(*(DREP)); }
+    double getRandomNumberY() const { return (*(URDP_Y))(*(DREP)); }
   protected:
     double m_A, m_B;
     int m_N;
     const UNIVARIATE_FUNCTION& m_F;
-    std::vector<std::unique_ptr<std::mt19937>> DREP;
-    std::vector<std::unique_ptr<std::uniform_real_distribution<double>>> URDP_X, URDP_Y;
+    std::unique_ptr<std::mt19937> DREP;
+    std::unique_ptr<std::uniform_real_distribution<double>> URDP_X, URDP_Y;
     double MAXIMUM_VALUE_OF_FUNCTION, MINIMUM_VALUE_OF_FUNCTION;
   };
 };
@@ -44,21 +44,17 @@ void MonteCarloIntegration::MCI::SetupRNG(int NUM_THREADS)
   MAXIMUM_VALUE_OF_FUNCTION = std::max( m_F(m_A), m_F(m_B) );
   MINIMUM_VALUE_OF_FUNCTION = std::min( m_F(m_A), m_F(m_B) );
   //std::cout << "Function in : " << MINIMUM_VALUE_OF_FUNCTION << "\t" << MAXIMUM_VALUE_OF_FUNCTION << std::endl;
-  DREP.resize( NUM_THREADS );
-  URDP_X.resize( NUM_THREADS );
-  URDP_Y.resize( NUM_THREADS );
   std::random_device rd;
-  for( int tid = 0; tid < NUM_THREADS; ++tid ) {
-    std::seed_seq seed{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
-    DREP[tid].reset(new std::mt19937( seed ));
-    URDP_X[tid].reset(new std::uniform_real_distribution<double>(m_A,m_B));
-    URDP_Y[tid].reset(new std::uniform_real_distribution<double>(0,MAXIMUM_VALUE_OF_FUNCTION));
-  }
+  std::seed_seq seed{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
+  DREP.reset(new std::mt19937( seed ));
+  URDP_X.reset(new std::uniform_real_distribution<double>(m_A,m_B));
+  URDP_Y.reset(new std::uniform_real_distribution<double>(0,MAXIMUM_VALUE_OF_FUNCTION));
+
   if(false){
     std::ofstream f("a.dat");
     for( int i=0; i < 100; ++i ) { 
-      double x = getRandomNumberX(0);
-      f << x << "\t" << m_F(x) << "\t" << getRandomNumberY(0) << "\n";
+      double x = getRandomNumberX();
+      f << x << "\t" << m_F(x) << "\t" << getRandomNumberY() << "\n";
     }
   }
   #if 0
@@ -72,18 +68,16 @@ void MonteCarloIntegration::MCI::SetupRNG(int NUM_THREADS)
 double MonteCarloIntegration::MCI::Integral() const
 {
   std::vector<double> retval(8);
-  #pragma omp parallel for
+  //#pragma omp parallel for
   for( int i=0; i < m_N; ++i ) {
-    double x = getRandomNumberX( omp_get_thread_num() );
-    double y = getRandomNumberY( omp_get_thread_num() );
+    double x = getRandomNumberX();
+    double y = getRandomNumberY();
     //std::cout << "Trial " << i << "\t X = " << x << "\t f(x) = " << m_F(x) << "\t Y = " << y << "\n";
     if( y <= m_F(x) ) retval[i%8]++;
   }
   double num_accepted = 0;
   for( double val : retval ) num_accepted += val;
-  double systematic_correction = 1.0;
-  if( omp_get_max_threads() > 1 ) systematic_correction = 1.015;
-  return (systematic_correction)*(m_B-m_A)*((MAXIMUM_VALUE_OF_FUNCTION*num_accepted)/(double)m_N);
+  return (m_B-m_A)*((MAXIMUM_VALUE_OF_FUNCTION*num_accepted)/(double)m_N);
 }
 
 using namespace MonteCarloIntegration;
@@ -151,7 +145,8 @@ void Polynomial<T>::RandomCoefficients()
 {
   std::random_device rd;  // produces a seed
   std::mt19937 gen(rd()); 
-  std::uniform_int_distribution<> distribution(0,10);
+  //std::uniform_int_distribution<> distribution(0,100);
+  std::uniform_real_distribution<>  distribution(0,1.0);
   for( auto& coeff : (*this) ) coeff = distribution(gen);
 }
 
@@ -163,15 +158,19 @@ static void TestMonteCarlo( int M, int N )
   std::cout << std::setw(8) << "POL INT" << "\t" << std::setw(8) << "MC INT" << "\t" 
 	    << std::setw(8) << "ERROR" << "\t" << std::setw(8) << "REL ERROR" << "\t\t" << "POLYNOMIAL" << std::endl;
   std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
+  #pragma omp parallel for
   for( int i=0; i < M; ++i ) {
     PX px(10);
     px.RandomCoefficients();
-    MCI m(1.0,2.0,N,px.getHorner());
+    double A = 1.15;
+    double B = 2.23;
+    MCI m(A,B,N,px.getHorner());
     double mc_int = m.Integral();
-    double pc_int = px.Integral(1.0,2.0);
+    double pc_int = px.Integral(A,B);
     double error  = std::abs(pc_int-mc_int);
     double rel    = 100.0*error/pc_int;
     max_rel_error = std::max( max_rel_error, rel );
+    #pragma omp critical
     std::cout << std::setw(8) << pc_int << "\t" << std::setw(8) << mc_int << "\t" 
 	      << std::setw(8) << error << "\t" << std::setw(8) << rel << "\t" << px << std::endl;
   }
