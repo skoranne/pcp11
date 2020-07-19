@@ -25,7 +25,7 @@ namespace MonteCarloIntegration {
     MCI( double A, double B, int N, const UNIVARIATE_FUNCTION& F ): m_A{A}, m_B{B}, m_N{N}, m_F{F} { SetupRNG(); }
     double Integral() const;
   private:
-    void SetupRNG(int NUM_THREADS=8);
+    void SetupRNG();
     double getRandomNumberX() const { return (*(URDP_X))(*(DREP)); }
     double getRandomNumberY() const { return (*(URDP_Y))(*(DREP)); }
   protected:
@@ -38,7 +38,7 @@ namespace MonteCarloIntegration {
   };
 };
 
-void MonteCarloIntegration::MCI::SetupRNG(int NUM_THREADS)
+void MonteCarloIntegration::MCI::SetupRNG()
 {
   // Assumption 1: function is monotonic, so max is either f(A) or f(B)
   MAXIMUM_VALUE_OF_FUNCTION = std::max( m_F(m_A), m_F(m_B) );
@@ -65,19 +65,25 @@ void MonteCarloIntegration::MCI::SetupRNG(int NUM_THREADS)
   #endif
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Originally the plan was for multiple random evals in this loop for the
+// trials. But there is lot of correlation between the RNG across multiple
+// threads. It is thus better if multiple polynomials are computed in
+// parallel. The polynomials have the same domain, so actually the X rng
+// could in theory be shared, redcuing the work, but in future we want to
+// explore multiple domains.
+//
+////////////////////////////////////////////////////////////////////////////////
 double MonteCarloIntegration::MCI::Integral() const
 {
-  std::vector<double> retval(8);
-  //#pragma omp parallel for
+  double retval=0;
   for( int i=0; i < m_N; ++i ) {
     double x = getRandomNumberX();
     double y = getRandomNumberY();
     //std::cout << "Trial " << i << "\t X = " << x << "\t f(x) = " << m_F(x) << "\t Y = " << y << "\n";
-    if( y <= m_F(x) ) retval[i%8]++;
+    if( y < m_F(x) ) retval++;
   }
-  double num_accepted = 0;
-  for( double val : retval ) num_accepted += val;
-  return (m_B-m_A)*((MAXIMUM_VALUE_OF_FUNCTION*num_accepted)/(double)m_N);
+  return (m_B-m_A)*((MAXIMUM_VALUE_OF_FUNCTION*retval)/(double)m_N);
 }
 
 using namespace MonteCarloIntegration;
@@ -156,7 +162,7 @@ static void TestMonteCarlo( int M, int N )
   using PX = Polynomial<double>;
   double max_rel_error = 0;
   std::cout << std::setw(8) << "POL INT" << "\t" << std::setw(8) << "MC INT" << "\t" 
-	    << std::setw(8) << "ERROR" << "\t" << std::setw(8) << "REL ERROR" << "\t\t" << "POLYNOMIAL" << std::endl;
+	    << std::setw(8) << "ERROR" << "\t" << std::setw(8) << "REL %ERROR" << "\t\t" << "POLYNOMIAL" << std::endl;
   std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
   #pragma omp parallel for
   for( int i=0; i < M; ++i ) {
