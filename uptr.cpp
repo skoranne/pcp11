@@ -15,6 +15,8 @@
 #include <typeinfo> // for typeinfo(A).name()
 #include <type_traits> // for POD stuff
 
+// Adding more information
+
 namespace Example {
   enum class Operations : int { NONE=0, ADD, SUB, MUL, DIV, MOD, EXP, LOG, LSH, RSH };
 int OperationsToInt( Operations );
