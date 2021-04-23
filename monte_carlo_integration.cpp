@@ -4,6 +4,7 @@
 // Purpose: Use the C++-11 random number functionality to integrate multidim 
 //        : functions using sample-reject Monte Carlo algorithm
 //
+// (1) Compiled on Visual Studio also
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <cassert>
