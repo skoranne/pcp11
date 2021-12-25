@@ -4,6 +4,7 @@
 // Purpose: Use the C++-11 random number functionality to integrate multidim 
 //        : functions using sample-reject Monte Carlo algorithm
 //
+// (1) Compiled on Visual Studio also
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <cassert>
@@ -102,7 +103,7 @@ public:
   UNIVARIATE_FUNCTION getHorner() const {
     auto constructed_lambda = [=](double x) -> double {
       double b = (*this)[this->size()-1];
-      for( int i=this->size()-2; i >= 0; --i ) {
+      for( int i=static_cast<int>(this->size())-2; i >= 0; --i ) {
 	b = (*this)[i] + b*x;
       }
       return b;
@@ -170,7 +171,8 @@ static void TestMonteCarlo( int M, int N )
     px.RandomCoefficients();
     double A = 1.15;
     double B = 2.23;
-    MCI m(A,B,N,px.getHorner());
+    auto f{px.getHorner()}; // Visual Studio needs this outside
+    MCI m(A,B,N,f);
     double mc_int = m.Integral();
     double pc_int = px.Integral(A,B);
     double error  = std::abs(pc_int-mc_int);
