@@ -32,6 +32,7 @@ unsigned long countPrimes( unsigned long limit )
       sum++;
     }
   std::cout << "There are " << sum << " primes upto " << limit << std::endl;
+  return sum;
 }
 
 int main( int argc, char* argv[] )
@@ -39,6 +40,7 @@ int main( int argc, char* argv[] )
   unsigned long limit = 2000;
   if( argc > 1 ) limit = atoi( argv[1] );
   unsigned long P = countPrimes( limit );
+  assert( P > 0 );
   return 0;
 }
 
