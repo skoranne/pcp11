@@ -5,3 +5,15 @@ git checkout NEW_BRANCH_NAME
 git pull
 git push origin NEW_BRANCH_NAME
 git request-pull master ./ -p
+
+sudo powermetrics --samplers smc |grep -i "CPU die temperature"
+/Applications/Julia-1.8.app/Contents/Resources/julia/bin/julia
+
+How to setup Python virtual env
+python3 -m venv ~/venv-metal
+source ~/venv-metal/bin/activate
+python -m pip install -U pip
+
+Only need
+source ~/venv-metal/bin/activate
+/Library/TeX/texbin/pdflatex
