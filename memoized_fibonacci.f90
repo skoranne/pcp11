@@ -39,3 +39,11 @@ program fibonacci_main
   call print_fibonacci()
 end program fibonacci_main
 
+!!
+!! Enter how many Fibonacci Numbers you need: 
+!! 10
+!! Generating the first 10 Fibonacci numbers.
+!!           1           1           2           3           5           8
+!!          13          21          34          55
+!!  ----------
+
