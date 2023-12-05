@@ -17,3 +17,10 @@ python -m pip install -U pip
 Only need
 source ~/venv-metal/bin/activate
 /Library/TeX/texbin/pdflatex
+
+docker run -it --security-opt seccomp=unconfined daly/axiom axiom
+id -u := 501
+id -g := 20
+
+
+docker run -it -u 501:20 -v /Users/skoranne/ICSC_HOME:/programs ghcr.io/intel/llvm/ubuntu2004_base bash
