@@ -5,6 +5,7 @@
 //        : functions using sample-reject Monte Carlo algorithm
 //
 // (1) Compiled on Visual Studio also
+// (2) getting ready for CoPilot and VSCode
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <cassert>
