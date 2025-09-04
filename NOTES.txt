@@ -24,3 +24,14 @@ id -g := 20
 
 
 docker run -it -u 501:20 -v /Users/skoranne/ICSC_HOME:/programs ghcr.io/intel/llvm/ubuntu2004_base bash
+
+podman create -p 127.0.0.1:3000:8080 --network=host \
+--add-host=localhost:127.0.0.1 \
+--env 'OLLAMA_BASE_URL=http://localhost:11434' \
+--env 'ANONYMIZED_TELEMETRY=False' \
+-v open-webui:/app/backend/data \
+--label io.containers.autoupdate=registry \
+--name open-webui ghcr.io/open-webui/open-webui:main
+
+podman run -p 127.0.0.1:3000:8080 --network=host --add-host=localhost:127.0.0.1 --env OLLAMA_BASE_URL=http://localhost:11434 --env ANONYMIZED_TELEMETRY=False -v open-webui:/app/backend/data --label io.containers.autoupdate=registry --name open-webui ghcr.io/open-webui/open-webui:main
+
