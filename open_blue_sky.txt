@@ -1,0 +1,184 @@
+                     OPEN BLUE SKY
+
+  This short note describes my experiment to setup OpenROAD
+with BlueSpec Verilog on Skywater130A technology. Along the
+way we also install GAP, Spiral, Sage, LLVM, MMIX, and other
+interesting tools and systems. Things have come a long way
+from our days of magic. Infact, the final objective is to
+have a fully comprehensive system able to run GHC, Cryptol,
+GAP, Singular, z3, Reduce, Julia, Fortran, SBCL in an useful
+form.
+
+  The highlevel goal of connecting a hardware DSL with proof
+systems in z3, Cryptol and ACL2 is important in the context
+of reduced precision computing. Can we prove correctness of
+systems with reduced precision ? Can we find better and even
+more powerful abstractions to design machine learning chips.
+
+What is BlueSpec and why should we care ?
+
+Hardware design is inherently different and parallel, as
+opposed to the sequential, one program counter instruction
+at a time model we are used to in software. Therefore, we
+must think parallel when we are describing hardware actions.
+BlueSpec already does this with a concept known as 'rules'.
+Rules are concurrently fired when their preconditions are
+met, and the sequencing and scheduling logic is generated
+automatically by the BlueSpec compiler. This is a huge
+cognitive burden lifted off our brains.
+
+** Please remember that for SRAM generation, the config file has to be a Python file **
+PDK_ROOT=/scratch1/skoranne/OSS_EDA_TOOLS/OpenRAM/
+OPENRAM_HOME=/scratch1/skoranne/OSS_EDA_TOOLS/OpenRAM/compiler
+OPENRAM_TECH=/scratch1/skoranne/OSS_EDA_TOOLS/OpenRAM/technology
+
+# 8_16 8-bit 16 entries SRAM
+word_size = 8
+num_words = 16
+tech_name = "sky130"
+nominal_corner_only = True
+num_rw_ports = 1
+num_r_ports = 1
+num_w_ports = 0
+ports_human = '1rw1r'
+
+output_name = "sram_16x8"
+
+
+rm *.ba *.bo s.exe s.exe.so;
+bsc -sim -u  Top.bsv;
+bsc -sim -g mkTop Top.bsv;
+bsc -sim -e mkTop -o s.exe;./s.exe
+
+Booting processor.......
+Done.
+
+Self testing processor.......
+Done.
+
+Fetch instruction:          0.
+
+Self testing processor.......
+Done.
+
+Decoding instruction.
+
+Executing...
+
+[ 2]                    8 = [ 1]                    2 [ 1]                    2 instr: SLL
+
+---------***---------
+
+Reg[ 1] =                    2
+Reg[ 2] =                    8
+Reg[ 3] = 12297829382473034410
+Fetch instruction:          4.
+
+Decoding instruction.
+
+Executing...
+
+[ 3]                   10 = [ 1]                    2 [ 2]                    8 instr: ADD
+
+---------***---------
+
+Reg[ 1] =                    2
+Reg[ 2] =                    8
+Reg[ 3] =                   10
+Fetch instruction:          8.
+
+Decoding instruction.
+
+Executing...
+
+[ 0]                    0 = [ 0]                    0 [ 0]                    0 instr: NOP
+
+---------***---------
+
+Reg[ 1] =                    2
+Reg[ 2] =                    8
+Reg[ 3] =                   10
+Fetch instruction:         12.
+
+Decoding instruction.
+
+Executing...
+
+[ 0]                    0 = [ 0]                    0 [ 0]                    0 instr: NOP
+
+---------***---------
+
+Reg[ 1] =                    2
+Reg[ 2] =                    8
+Reg[ 3] =                   10
+Fetch instruction:         16.
+
+Decoding instruction.
+
+
+
+
+Technology Mapping
+read_liberty -overwrite -setattr liberty_cell -ignore_miss_func /scratch1/skoranne/OSS_EDA_TOOLS/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v65.lib 
+read_verilog verilog_RTL/mkBubblesort.v 
+hierarchy -top mkBubblesort 
+synth -top mkBubblesort
+dfflibmap -liberty /scratch1/skoranne/OSS_EDA_TOOLS/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v65.lib 
+abc -liberty /scratch1/skoranne/OSS_EDA_TOOLS/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__f_n40C_1v65.lib
+clean
+write_verilog -noattr mkBubbleSort.gv 
+
+P&R
+TECH LEF
+/scratch1/skoranne/OSS_EDA_TOOLS/open_pdks/sources/sky130_fd_sc_hd/tech/sky130_fd_sc_hd__nom.tlef
+or
+/scratch1/skoranne/OSS_EDA_TOOLS/OpenROAD-flow-scripts/flow/platforms/sky130hd/lef/sky130_fd_sc_hd.tlef 
+
+
+SC LEF
+/scratch1/skoranne/OPENLANE/OpenLane.working/pdks/sky130A/libs.ref/sky130_fd_sc_hd//lef/sky130_fd_sc_hd.lef            or
+/scratch1/skoranne/OSS_EDA_TOOLS/OpenROAD-flow-scripts/flow/platforms/sky130hd/lef/sky130_fd_sc_hd_merged.lef 
+
+read_liberty
+/scratch1/skoranne/OSS_EDA_TOOLS/open_pdks/sky130/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v65.lib
+
+read_verilog mkBubbleSort.gv
+link_design mkBubblesort
+
+podman run --rm -v /scratch1/skoranne/OPENLANE/AIML:/openlane -v /scratch1/skoranne/OPENLANE/AIML/designs:/openlane/install -v /scratch1/skoranne/OPENLANE/OpenLane.working/pdks:/scratch1/skoranne/OPENLANE/OpenLane.working/pdks -e PDK_ROOT=/scratch1/skoranne/OPENLANE/OpenLane.working/pdks -e PDK=sky130A -e STD_CELL_LIBRARY=sky130_fd_sc_hd   -e DISPLAY=localhost:10.0 -v /tmp/.X11-unix:/tmp/.X11-unix:Z --security-opt label=type:container_runtime_t -v /home/skoranne/.Xauthority:/.Xauthority:Z --network host --net=host -e ROUTING_CORES=32 efabless/openlane:b6bacc9d1ab469917fda7ceea61ea3a18984b818-amd64 sh -c "./flow.tcl -design BM64 -tag openlane_test -overwrite"
+
+
+
+Appendix
+gperf -o -i 7 -C -k '1-4,6,9,$' -H keyword_hash -N check_identifier -t ./lexor_keyword.gperf
+struct lexor_keyword { const char*name; int mask; int tokenType; };
+%%
+above,                  GN_KEYWORDS_VAMS_2_3,           K_above
+abs,                    GN_KEYWORDS_VAMS_2_3,           K_abs
+
+KLayout Python API
+import pya
+
+layout = pya.Layout()
+top = layout.create_cell("TOP")
+l1 = layout.layer(1, 0)
+top.shapes(l1).insert(pya.Box(0, 0, 1000, 2000))
+
+layout.write("t.gds")
+
+$klayout -r file.py -zz
+
+import pya
+
+layout = pya.Layout()
+layout.read("rocket_chip.gds")
+options = pya.SaveLayoutOptions()
+options.format = "OASIS"
+
+options.oasis_compression_level = 10
+options.oasis_write_cblocks = True
+options.oasis_strict_mode = True
+options.oasis_write_std_properties = 2
+options.oasis_write_cell_bounding_boxes = True
+layout.write("t.oas")
+# get the doc https://www.klayout.de/doc-qt5/code/class_SaveLayoutOptions.html#k_76
