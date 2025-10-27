@@ -148,6 +148,11 @@ link_design mkBubblesort
 podman run --rm -v /scratch1/skoranne/OPENLANE/AIML:/openlane -v /scratch1/skoranne/OPENLANE/AIML/designs:/openlane/install -v /scratch1/skoranne/OPENLANE/OpenLane.working/pdks:/scratch1/skoranne/OPENLANE/OpenLane.working/pdks -e PDK_ROOT=/scratch1/skoranne/OPENLANE/OpenLane.working/pdks -e PDK=sky130A -e STD_CELL_LIBRARY=sky130_fd_sc_hd   -e DISPLAY=localhost:10.0 -v /tmp/.X11-unix:/tmp/.X11-unix:Z --security-opt label=type:container_runtime_t -v /home/skoranne/.Xauthority:/.Xauthority:Z --network host --net=host -e ROUTING_CORES=32 efabless/openlane:b6bacc9d1ab469917fda7ceea61ea3a18984b818-amd64 sh -c "./flow.tcl -design BM64 -tag openlane_test -overwrite"
 
 
+--------------------------------------------------------------------------------
+How can we restart the flow post-synthesis
+"FLOW_SYNTHESIS_SUCCESS": true,
+"FLOW_SYNTHESIS_SKIP": true,
+and in scripts/tcl/all.tcl: make sure the delete command is commented out
 
 Appendix
 gperf -o -i 7 -C -k '1-4,6,9,$' -H keyword_hash -N check_identifier -t ./lexor_keyword.gperf
@@ -182,3 +187,36 @@ options.oasis_write_std_properties = 2
 options.oasis_write_cell_bounding_boxes = True
 layout.write("t.oas")
 # get the doc https://www.klayout.de/doc-qt5/code/class_SaveLayoutOptions.html#k_76
+
+--------------------------------------------------------------------------------
+Macro Placement
+   "EXTRA_LEFS":[
+       "dir::macros/mkALU.lef",
+       "dir::macros/mkFPU.lef"
+    ],
+    "EXTRA_DEFS":[
+       "dir::macros/mkALU.def",
+       "dir::macros/mkFPU.def"
+    ],
+    "VERILOG_FILES_BLACKBOX": [
+       "dir::macros/mkALU.v",
+       "dir::macros/mkFPU.v"
+    ],
+
+
+--------------------------------------------------------------------------------
+DB
+[skoranne@localhost ~]$ ~/.duckdb/cli/latest/duckdb NL.db
+DuckDB v1.4.0 (Andium) b8a06e4a22
+Enter ".help" for usage hints.
+D create table services as from 'services-2023.csv.gz';
+100% ▕██████████████████████████████████████▏ (00:00:46.03 elapsed)                                                          
+D SELECT format('{:,}', count(*)) AS num_services from services;
+┌──────────────┐
+│ num_services │
+│   varchar    │
+├──────────────┤
+│ 21,239,393   │
+└──────────────┘
+D 
+

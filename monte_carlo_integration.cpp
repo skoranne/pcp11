@@ -166,7 +166,7 @@ static void TestMonteCarlo( int M, int N )
   std::cout << std::setw(8) << "POL INT" << "\t" << std::setw(8) << "MC INT" << "\t" 
 	    << std::setw(8) << "ERROR" << "\t" << std::setw(8) << "REL %ERROR" << "\t\t" << "POLYNOMIAL" << std::endl;
   std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
-  #pragma omp parallel for
+  #pragma omp parallel for reduction(max:max_rel_error)
   for( int i=0; i < M; ++i ) {
     PX px(10);
     px.RandomCoefficients();
@@ -179,9 +179,11 @@ static void TestMonteCarlo( int M, int N )
     double error  = std::abs(pc_int-mc_int);
     double rel    = 100.0*error/pc_int;
     max_rel_error = std::max( max_rel_error, rel );
+#if 0
     #pragma omp critical
     std::cout << std::setw(8) << pc_int << "\t" << std::setw(8) << mc_int << "\t" 
 	      << std::setw(8) << error << "\t" << std::setw(8) << rel << "\t" << px << std::endl;
+#endif
   }
   std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
   std::cout << "MAX REL ERROR := " << max_rel_error << std::endl;
@@ -218,4 +220,37 @@ Running TestMonteCarlo with N = 1000000
  1165.39	 1163.24	 2.15219	0.184676	P := [ 0 5 10 6 0 10 7 8 2 5 ] 
 ------------------------------------------------------------------------------------------------
 MAX REL ERROR := 0.356958
+[skoranne@localhost pcp11]$ time ./monte_carlo_integration_intel.exe 1000000 1000000 32
+Running MC Integration with 32 OpenMP threads.
+Running TestMonteCarlo with N = 1000000
+ POL INT	  MC INT	   ERROR	REL %ERROR		POLYNOMIAL
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+MAX REL ERROR := 0.87061
+
+real	23m29.571s
+user	653m34.759s
+sys	0m1.345s
+[skoranne@localhost pcp11]$ time ./monte_carlo_integration_intel.exe 1000000 1000000 128
+Running MC Integration with 128 OpenMP threads.
+Running TestMonteCarlo with N = 1000000
+ POL INT	  MC INT	   ERROR	REL %ERROR		POLYNOMIAL
+------------------------------------------------------------------------------------------------
+^C
+
+real	5m51.659s
+user	278m4.833s
+sys	0m1.011s
+[skoranne@localhost pcp11]$ time ./monte_carlo_integration_intel.exe 1000000 1000000 48
+Running MC Integration with 48 OpenMP threads.
+Running TestMonteCarlo with N = 1000000
+ POL INT	  MC INT	   ERROR	REL %ERROR		POLYNOMIAL
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+MAX REL ERROR := 0.918871
+
+real	20m4.535s
+user	930m37.999s
+sys	0m4.307s
 #endif
+
