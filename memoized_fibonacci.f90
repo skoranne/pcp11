@@ -14,6 +14,10 @@ module memoized_fibonacci
      module procedure print_fibonacci
   end interface print_fibonacci
   
+  interface print_factorial
+     module procedure print_factorial
+  end interface print_factorial
+  
   contains
   subroutine print_fibonacci
     integer :: N,i
@@ -31,12 +35,29 @@ module memoized_fibonacci
     write (stdout,*) "----------"
     deallocate(fnumbers)
   end subroutine print_fibonacci
+  
+  subroutine print_factorial
+    integer :: N,i
+    integer, dimension(:), allocatable :: fact
+    write (stdout,*) 'Enter how many factorial numbers you need: '
+    read  (stdin,*) N
+    write (stdout,FMT='(A,I2,A)') 'Generating the first ',N,' factorial numbers.'
+    allocate(fact(N))
+    fact(1) = 1
+    do i=2,N
+       fact(i) = i * fact(i-1)
+    end do
+    write (stdout,FMT='(6I)') fact
+    write (stdout,*) "----------"
+    deallocate(fact)
+  end subroutine print_factorial
 end module memoized_fibonacci
 
 program fibonacci_main
   use memoized_fibonacci
   implicit none
   call print_fibonacci()
+  call print_factorial()
 end program fibonacci_main
 
 !!
@@ -45,5 +66,10 @@ end program fibonacci_main
 !! Generating the first 10 Fibonacci numbers.
 !!           1           1           2           3           5           8
 !!          13          21          34          55
+!!  ----------
+!! Enter how many factorial numbers you need: 
+!! 6
+!! Generating the first 6 factorial numbers.
+!!           1           1           2           6          24         120
 !!  ----------
 
