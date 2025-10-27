@@ -1,0 +1,18 @@
+#include <iostream>
+#include "mc_poly.h" // Include the header file for the Monte Carlo integration classes
+
+int main() {
+    std::vector<double> coeffs = {1, 0, -2}; // Define coefficients of a polynomial
+    Polynomial poly(coeffs); // Create an instance of the Polynomial class
+    
+    double lowerBound = -5.0; // Set integration bounds
+    double upperBound = 5.0;
+    MonteCarloIntegrator integrator(lowerBound, upperBound); // Create an instance of the Monte Carlo Integrator class
+    
+    int numSamples = 1000000; // Set number of samples for numerical integration
+    double result = integrator.integratePolynomial(poly, numSamples); // Perform numerical integration
+    
+    std::cout << "The integral of the polynomial is approximately: " << result << std::endl;
+    
+    return 0;
+}
