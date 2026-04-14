@@ -22,9 +22,9 @@ namespace BoundaryIntegration {
     Point u,v; // u->v line, as a vector
   };
   using PolyLine = std::vector<Line>;
-  template <typename FUNC, template <typename FUNC> class ALGORITHM>  
+  template <typename FUNC, template <typename FUNC2> class ALGORITHM>  
   double CalculateLineIntegral(ALGORITHM<FUNC> f, Line L);
-  template <typename FUNC, template <typename FUNC> class ALGORITHM>
+  template <typename FUNC, template <typename FUNC2> class ALGORITHM>
   double CalculateLineIntegral(ALGORITHM<FUNC> f, const PolyLine& PL);
 
   template <typename FUNC>
@@ -44,7 +44,7 @@ double BoundaryIntegration::MIDPOINT<FUNC>::CalculateLineIntegral( Line L )
   return m_f( mid_point );
 }
 
-template <typename FUNC, template <typename FUNC> class ALGORITHM>
+template <typename FUNC, template <typename FUNC2> class ALGORITHM>
 double BoundaryIntegration::CalculateLineIntegral(ALGORITHM<FUNC> f, const PolyLine& PL)
 {
   double retval = 0.0;
@@ -54,15 +54,11 @@ double BoundaryIntegration::CalculateLineIntegral(ALGORITHM<FUNC> f, const PolyL
   return retval;
 }
 
-template <typename FUNC, template <typename FUNC> class ALGORITHM>
+template <typename FUNC, template <typename FUNC2> class ALGORITHM>
 double BoundaryIntegration::CalculateLineIntegral(ALGORITHM<FUNC> f, const Line L)
 {
   return f.CalculateLineIntegral( L );
 }
-
-
-
-
 
 using namespace BoundaryIntegration;
 
@@ -78,11 +74,11 @@ static void TestSimpleLine()
   std::cout << "Ans = " << ans << std::endl;
 }
 
+#if 0
 int main()
 {
   TestSimpleLine();
-
   return 0;
 }
-
+#endif
 
