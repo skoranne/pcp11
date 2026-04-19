@@ -35,3 +35,18 @@ podman create -p 127.0.0.1:3000:8080 --network=host \
 
 podman run -p 127.0.0.1:3000:8080 --network=host --add-host=localhost:127.0.0.1 --env OLLAMA_BASE_URL=http://localhost:11434 --env ANONYMIZED_TELEMETRY=False -v open-webui:/app/backend/data --label io.containers.autoupdate=registry --name open-webui ghcr.io/open-webui/open-webui:main
 
+TRILINOS
+cmake .. -DCMAKE_INSTALL_PREFIX=/home/skoranne/OSS_DOWNLOADS/TRILLINOS_INSTALL -D Trilinos_ENABLE_ALL_PACKAGES=ON -D Trilinos_ENABLE_ALL_OPTIONAL_PACKAGES=ON  -D TPL_ENABLE_BLAS:BOOL=ON -D KokkosKernels_ENABLE_TPL_CUBLAS:BOOL=ON -D BLAS_LIBRARY_DIRS:PATH="${CUDA_ROOT}/lib64" -D TPL_BLAS_LIBRARIES:PATH="${CUDA_ROOT}/lib64/libcublas.so"
+
+FOR CUDA we had to change it 
+cmake -DCMAKE_INSTALL_PREFIX=/home/skoranne/OSS_DOWNLOADS/TRILLINOS_CUDA_INSTALL -D Trilinos_ENABLE_ALL_PACKAGES=ON -D Trilinos_ENABLE_ALL_OPTIONAL_PACKAGES=ON  -D TPL_ENABLE_BLAS:BOOL=ON -D KokkosKernels_ENABLE_TPL_CUBLAS:BOOL=ON -DCUDAToolkit_ROOT=/opt/nvidia/hpc_sdk/Linux_aarch64/25.9/cuda/13.0/ -DTrilinos_ENABLE_CUDA=ON -DTrilinos_ENABLE_Kokkos:BOOL=ON -DTPL_ENABLE_CUDA:BOOL=ON -DTpetra_INST_CUDA:BOOL=ON  -D BLAS_LIBRARY_DIRS:PATH="/opt/nvidia/hpc_sdk/Linux_aarch64/25.9/REDIST/math_libs/13.0/targets/sbsa-linux/lib/libcublas.so" -D TPL_BLAS_LIBRARIES:PATH="/opt/nvidia/hpc_sdk/Linux_aarch64/25.9/REDIST/math_libs/13.0/targets/sbsa-linux/lib/libcublas.so" -DTrilinos_DIR=/home/skoranne/OSS_DOWNLOADS/TRILLINOS_CUDA_INSTALL/lib/cmake/Trilinos ..
+export CMAKE_PREFIX_PATH="$(dirname $(which conda))/../:$(python -c 'import torch;print(torch.utils.cmake_prefix_path)')"
+
+FOR SPACK for palace
+git clone --depth=2 https://github.com/spack/spack.git
+. spack/share/spack/setup-env.sh
+Then we can run spack load palace, palace --version, palace --np 4 sphere.json
+
+Using Singularity and Apptainer, we can build a SIF from singularity.def, and then run apptainer or singularity
+
+
