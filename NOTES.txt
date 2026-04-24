@@ -1,3 +1,5 @@
+These are notes for useful work:
+git clone git@github.com:skoranne/pcp11.git
 git branch -b NEW_BRANCH_NAME
 git checkout master
 git pull
