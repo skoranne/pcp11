@@ -1,0 +1,50 @@
+Bootstrap: docker
+From: registry.access.redhat.com/ubi8/ubi:latest
+
+%help
+    This container builds and runs an OpenMP-enabled C application on RHEL ubi8.
+
+%setup
+    # This runs on the host during build. 
+    # Ensure your source code (e.g., hello_openmp.c) is in the same directory.
+    mkdir -p ${APPTAINER_ROOTFS}/mnt/host_cache
+
+%files
+    # Copy your source code into the container
+    qepcad /opt/qepcad
+    Singular /opt/Singular/Singular
+    factory  /opt/Singular
+    omalloc /opt/Singular
+    resources /opt/Singular
+    libpolys /opt/Singular
+    /usr/local/lib/libflint.so.16 /usr/local/lib/libflint.so.16 
+    /usr/local/lib/sbcl /usr/local/lib/
+    /usr/local/bin/maxima /usr/local/bin/
+    /usr/local/bin/sbcl /usr/local/bin/
+    /usr/local/lib/maxima /usr/local/lib/
+    /usr/local/share/maxima /usr/local/share/
+%post
+    # Update and install GCC and OpenMP libraries
+    # dnf -y install https://fedoraproject.org
+    sed -i 's/keepcache=0/keepcache=1/g' /etc/yum.conf
+    sed -i 's|cachedir=.*|cachedir=/mnt/host_cache|g' /etc/yum.conf
+    yum install -y readline ncurses-libs mpfr gmp
+    # dnf -y install maxima  
+    # Clean up yum cache to keep the image slim
+    yum clean all
+    # dnf clean all
+%environment
+    # Set default OpenMP environment variables
+    export OMP_NUM_THREADS=4
+    export LC_ALL=C
+    export LD_LIBRARY_PATH=/opt/Singular/Singular/.libs/:/opt/Singular/factory/.libs/:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/opt/Singular/libpolys/polys/.libs/:/opt/Singular/omalloc/.libs/:/opt/Singular/resources/.libs/:$LD_LIBRARY_PATH/
+%runscript
+    # This is what happens when you call 'apptainer run'
+    exec /opt/qepcad "$@"
+
+%labels
+    Author SandeepKoranne
+    Version 1.0
+    Description QEPCAD, Singular and Maxima on RHEL ubi8
+

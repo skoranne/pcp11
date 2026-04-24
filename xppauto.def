@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: registry.access.redhat.com/ubi8/ubi:latest
+#apptainer build xppauto.sif xppauto.def
+%help
+    This container builds and runs XPPAUTO on RHEL ubi8.
+%setup
+    # This runs on the host during build. 
+%files
+    # Copy your source code into the container
+    xppaut /opt/xppaut
+%post
+    # Update and install X11 libraries
+    yum install -y libX11-devel
+    # Clean up yum cache to keep the image slim
+    yum clean all
+%environment
+    export LC_ALL=C
+%runscript
+    # This is what happens when you call 'apptainer run'
+    exec /opt/xppaut "$@"
+%labels
+    Author SandeepKoranne
+    Version 1.0
+    Description xppaut application on RHEL ubi8
+

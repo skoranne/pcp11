@@ -1,0 +1,21 @@
+[ -r /dev/kvm ] && [ -w /dev/kvm ] && echo "OK" || echo "FAIL"
+We have kvm
+
+  953  sudo make install
+ 1376  sudo mount rootfs.ext4 UBI_ROOTFS/
+ 1377  sudo tar -xf ubi8.tar -C UBI_ROOTFS/
+ 1378  sudo umount UBI_ROOTFS/
+ 1426  sudo mount rootfs.ext4 UBI_ROOTFS/
+ 1432  sudo cp /scratch1/skoranne/SOFTWARE/MC.exe .
+ 1435  sudo cp /scratch1/skoranne/SOFTWARE/lib/libgomp.so.1* ../lib64/
+ 1438  sudo umount UBI_ROOTFS/
+ 1447  sudo ip link add br0 type bridge
+ 1448  sudo ip link set br0 up
+ 1449  sudo ip tuntap add dev tap0 mode tap user skoranne
+ 1450  sudo ip link set tap0 master br0
+ 1451  sudo ip link set tap0 up
+sudo ip addr add 10.0.0.1/24 dev br0
+
+ 1452  history|grep sudo
+ 1453  history|grep sudo >> ~/GITHUB/pcp11/FIRECRACKER_NOTES.txt 
+./firecracker/firecracker-v1.15.1-x86_64 --no-api --config-file vm_config.json

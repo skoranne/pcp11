@@ -1,0 +1,1 @@
+/scratch1/skoranne/OSS_EDA_TOOLS/APPTAINER_INSTALL/bin/apptainer build --bind /scratch1/skoranne/OSS_EDA_TOOLS/APPTAINER_INSTALL/CONTAINERS/RPM_CACHE/:/mnt/host_cache QEPCAD_APP.sif qepcad_app.def

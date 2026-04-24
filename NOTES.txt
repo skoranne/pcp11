@@ -49,4 +49,5 @@ Then we can run spack load palace, palace --version, palace --np 4 sphere.json
 
 Using Singularity and Apptainer, we can build a SIF from singularity.def, and then run apptainer or singularity
 
+For GF180MCU Wafer Space, run nix-shell and then make librelane
 

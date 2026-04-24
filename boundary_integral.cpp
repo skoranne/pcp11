@@ -1,12 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-// File     : boundary_intergral.cpp
-// Author   : Sandeep Koranne (C) 2019. All rights reserved.
-//
-// Purpose  : Boundary integration on rectilinear domains.
-//          : given a function(x,y) evaluate integral on boundary
-//
-////////////////////////////////////////////////////////////////////////////////
-
 #include <cassert>
 #include <vector>
 #include <iostream>
@@ -74,11 +65,19 @@ static void TestSimpleLine()
   std::cout << "Ans = " << ans << std::endl;
 }
 
-#if 0
+// Generate C++ function for factorial using unsigned long
+
+unsigned long Factorial(unsigned int n) {
+    if (n == 0) return 1;
+    else return n * Factorial(n-1);
+}
+
 int main()
 {
   TestSimpleLine();
+  // TODO: make a call to factorial to test it and std::cout the result
+  std::cout << "Factorial(5) = " << Factorial(5) << std::endl;
+
   return 0;
 }
-#endif
 
