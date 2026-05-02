@@ -53,3 +53,17 @@ Using Singularity and Apptainer, we can build a SIF from singularity.def, and th
 
 For GF180MCU Wafer Space, run nix-shell and then make librelane
 
+podman run -it --rm -v /scratch1/skoranne/OSS_EDA_TOOLS/OpenFOAM-13:/OF13:Z -v /scratch1/skoranne/OSS_EDA_TOOLS/CFD/:/CFD:Z opencfd/openfoam-default
+podman run -it --rm glud/xyce:parallel Xyce --version
+DuckDB example with NL Trains already loaded in NL.db
+(base) [skoranne@localhost ~]$ duckdb NL.db 
+DuckDB v1.4.0 (Andium) b8a06e4a22
+Enter ".help" for usage hints.
+D SELECT format('{:,}', count(*)) AS num_services
+  FROM services;
+┌──────────────┐
+│ num_services │
+│   varchar    │
+├──────────────┤
+│ 21,239,393   │
+└──────────────┘

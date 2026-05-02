@@ -1,0 +1,6 @@
+It has been interesting reading about CMake
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+-DCMAKE_BUILD_TYPE=Release
+
