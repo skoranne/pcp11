@@ -4,7 +4,8 @@
 # Purpose : Example use of Julia packages and functionality, which is interesting
 #
 ################################################################################
-using Krylov, KrylovPreconditioners, Preconditioners, IterativeSolvers, LinearAlgebra, SparseArrays, ILUZero, Graphs, UnicodePlots, LinearSolve, MatrixMarket, MUMPS, SimpleWeightedGraphs, InteractiveUtils, Metis
+using Krylov, KrylovPreconditioners, Preconditioners, IterativeSolvers, LinearAlgebra, SparseArrays, ILUZero, Graphs, UnicodePlots, LinearSolve, MatrixMarket, MUMPS, SimpleWeightedGraphs, InteractiveUtils, Metis, Printf
+
 
 function TrickFunction(a,b,c)
     s=a+b+c
@@ -87,5 +88,18 @@ function Partition(g)
     perm, iperm = Metis.permutation(g)
     reordered_g = g[perm, perm]
     display(spy(reordered_g, title="Reordered graph"))
+end
+function matrix_to_gap_file(filename::String, A::AbstractMatrix, name="A")
+    rows, cols = size(A)
+    open(filename, "w") do f
+        write(f, "$name := [\n")
+        for i in 1:rows
+            row_str = join([string(val) for val in A[i, :]], ", ")
+            suffix = (i == rows) ? "" : ","
+            write(f, "  [$row_str]$suffix\n")
+        end
+        write(f, "];\n")
+    end
+    println("Matrix written to $filename")
 end
 
