@@ -20,6 +20,11 @@ Only need
 source ~/venv-metal/bin/activate
 /Library/TeX/texbin/pdflatex
 
+For IISC-TOOLS, the CONTAINER_NAME is actually something used inside the shell script:
+CONTAINER_NAME="SK_RUN" ./start_shell.sh you can run multiple images
+Similarly, in Librelane if you want to start/stop, do
+$librelane config.json --last-run -F Synthesis or Yosys.Synthesis or Floorplan etc.
+
 docker run -it --security-opt seccomp=unconfined daly/axiom axiom
 id -u := 501
 id -g := 20
