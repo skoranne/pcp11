@@ -7,6 +7,7 @@ git checkout NEW_BRANCH_NAME
 git pull
 git push origin NEW_BRANCH_NAME
 git request-pull master ./ -p
+gh repo create FilterDesign --public --source=. --remote=origin --push
 
 sudo powermetrics --samplers smc |grep -i "CPU die temperature"
 /Applications/Julia-1.8.app/Contents/Resources/julia/bin/julia
@@ -24,6 +25,7 @@ For IISC-TOOLS, the CONTAINER_NAME is actually something used inside the shell s
 CONTAINER_NAME="SK_RUN" ./start_shell.sh you can run multiple images
 Similarly, in Librelane if you want to start/stop, do
 $librelane config.json --last-run -F Synthesis or Yosys.Synthesis or Floorplan etc.
+librelane config.json --last-run -F OpenROAD.Floorplan
 
 docker run -it --security-opt seccomp=unconfined daly/axiom axiom
 id -u := 501
@@ -72,3 +74,21 @@ D SELECT format('{:,}', count(*)) AS num_services
 ├──────────────┤
 │ 21,239,393   │
 └──────────────┘
+
+
+SPIRAL and FIXED POINT DFT
+vi /usr/local/lib/python3.12/dist-packages/librelane/scripts/pyosys/synthesize.py  
+Always use yosys> check after techmap and proc;opts; this did find a COMBINATIONAL LOOP in our design.
+
+for ext in gd gi g; do
+    for file in *."$ext"; do
+        # 1. Print a header (optional, helps Kindle navigation)
+        echo "=== FILE: $file ===" >> consolidated_code.txt
+        
+        # 2. Append the file content
+        cat "$file" >> consolidated_code.txt
+        
+        # 3. Append the Form Feed (Page Break) character
+        printf "\f" >> consolidated_code.txt
+    done
+done
