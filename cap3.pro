@@ -6,36 +6,45 @@
 current_pass = 1 ;
 Group {
   // Matching the Physical IDs from the .geo file
-  Rect1     = Region[10]        ;
-  Rect2     = Region[11]        ;
-  Rect3     = Region[12];   
-  Diel      = Region[13]; 
-  BndRect1 = Region[110]; 
-  BndRect2 = Region[111]; 
-  BndRect3 = Region[113];
-  Vol_Ele = Region[ {Diel, Rect1, Rect2, Rect3} ];
-  All_Rects = Region [ {Rect1, Rect2, Rect3} ];
+  AllDiel      = Region[503:507]  ;
+  SubDiel      = Region[503];
+  FOXKDiel     = Region[504]     ;
+  PSGDiel      = Region[505]     ;
+  NILD2Diel    = Region[506];        
+  NILD3Diel    = Region[507]     ;
+  NILD4Diel    = Region[508]     ;
+  NILD5Diel    = Region[509];    
+  NILD6Diel    = Region[510]     ;
+  PI1KDiel     = Region[511];    
+  TargetRegion = Region[ {4:6,10:12,NILD2Diel} ];  
+  OneV      = Region[618]       ;
+  GND1       = Region[602:617]  ;  
+  GND2       = Region[617:668]  ;
+  All_Rects = Region [ 133:142 ];  
+  Vol_Ele = Region[ {AllDiel, All_Rects} ];
+
 }
 
 Function {
-  eps0 = 8.854187e-12;
-  epsilon[Diel] = 1.0 * eps0;
-  epsilon[Rect1] = 1.0 * eps0;
-  epsilon[Rect2] = 1.0 * eps0;
-  epsilon[Rect3] = 1.0 * eps0;  
-  
-  v_rect1 = 0.0;
-  v_rect2 = 1.0;
-  v_rect3 = 0.0;
-  
+  eps0 = 8.854187e-12           ;
+  epsilon[SubDiel] = 3.9 * eps0 ;
+  epsilon[FOXKDiel] = 3.9 * eps0 ;
+  epsilon[PSGDiel]  = 3.9 * eps0 ;
+  epsilon[NILD2Diel]= 4.05 * eps0 ;
+  epsilon[NILD3Diel]= 4.5 * eps0 ;
+  epsilon[NILD4Diel]= 4.2 * eps0 ;
+  epsilon[NILD5Diel]= 4.1 * eps0 ;
+  epsilon[NILD6Diel]= 4.0 * eps0 ;
+  epsilon[PI1KDiel] = 2.94 * eps0 ;
+  epsilon[All_Rects] = 1.0*eps0;
 }
 
 Constraint {
   { Name Dirichlet_Ele; Type Assign;
     Case {
-       { Region Rect1           ; Value v_rect1; }
-       { Region Rect2           ; Value v_rect2; }
-       { Region Rect3           ; Value v_rect3; }
+       { Region OneV            ; Value 1.0; }
+       { Region GND1             ; Value 0.0; }
+       { Region GND2           ; Value 0.0; }              
     }
   }
 }
@@ -75,13 +84,11 @@ Formulation {
   { Name Electrostatics_v; Type FemEquation;
     Quantity {
       { Name v; Type Local; NameOfSpace Hgrad_v_Ele; }
-//      { Name q; Type Global; NameOfSpace Hgrad_v_Ele; }
     }
     Equation {
       // Standard Laplace: (epsilon * grad v, grad v')
         Integral { [ epsilon[] * Dof{d v} , {d v} ];
         In Vol_Ele; Jacobian Vol; Integration Int; }
-	//GlobalTerm { [ Dof{q}, {v} ]; In All_Rects; }
     }
   }
 }
@@ -123,6 +130,15 @@ PostOperation {
       Print[ e, OnElementsOf Vol_Ele, File "e.pos" ];
       // C = 2 * Energy (since V = 1)
       Print[ Energy[Vol_Ele], OnGlobal, Format Table, File "energy.txt" ];
+    }
+  }
+}
+
+PostOperation {
+  { Name CrossSectionMap; NameOfPostProcessing EleSta_v;
+    Operation {
+    Print[ v, OnElementsOf TargetRegion, File "vtarget.pos" ]; 
+    Print[ e, OnElementsOf Vol_Ele, File "e.pos" ]; 
     }
   }
 }
