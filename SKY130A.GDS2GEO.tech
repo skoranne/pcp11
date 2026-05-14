@@ -1,0 +1,23 @@
+METAL{
+# name, layer, datatype, height, thickness
+nwell	64	20 0 0.12
+diff	65	20 0.12 0.12
+poly	66	20 0.3262 0.18
+li1	67	20 0.9361 0.1
+met1	68	20 1.3761 0.36
+met2	69	20 2.0061 0.36
+met3	70	20 2.7861 0.845
+met4	71	20 4.0211 0.845
+met5	72	20 5.3711 1.26
+}
+
+VIA{
+# layer, datatype, bottom, top
+# licon1	66	44 diff li1
+licon1	66	44 poly li1
+mcon	67	44 li1  met1
+via1	68	44 met1 met2
+via2	69	44 met2 met3
+via3	70	44 met3 met4
+via4	71	44 met4 met5
+}
