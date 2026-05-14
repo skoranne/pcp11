@@ -6,29 +6,20 @@
 current_pass = 1 ;
 Group {
   // Matching the Physical IDs from the .geo file
-  Rect1     = Region[10]        ;
-  Rect2     = Region[11]        ;
-  Rect3     = Region[12];   
-  Diel      = Region[13]; 
-  BndRect1 = Region[110]; 
-  BndRect2 = Region[111]; 
-  BndRect3 = Region[113];
-  //Vol_Ele = Region[ {Diel, Rect1, Rect2, Rect3} ] ;
-  Vol_Ele = Region[ {Diel} ];
-  All_Rects = Region [ {Rect1, Rect2, Rect3} ];
+  Rect1     = Region[ {2:800} ]   ;
+  Rect2     = Region[ 801 ];
+  Rect3     = Region[ {802:1000} ];
+  Diel      = Region[ 1 ];
+  Vol_Ele = Region[ {Diel} ];  
 }
 
 Function {
   eps0 = 8.854187e-12;
-  epsilon[Diel] = 1.0 * eps0;
-  epsilon[Rect1] = 1.0 * eps0;
-  epsilon[Rect2] = 1.0 * eps0;
-  epsilon[Rect3] = 1.0 * eps0;  
-  
+  epsilon[] = ( Z[] < 1376.1 ) ? 3.9 : 4.5;
   v_rect1 = 0.0;
   v_rect2 = 1.0;
   v_rect3 = 0.0;
-  
+  //epsilon[AllRect] = 1.0 * eps0;
 }
 
 Constraint {
@@ -45,7 +36,7 @@ FunctionSpace {
   { Name Hgrad_v_Ele; Type Form0;
     BasisFunction {
       { Name sn; NameOfCoef vn; Function BF_Node;
-        Support Vol_Ele; Entity NodesOf[ All ]; }
+        Support Vol_Ele; Entity NodesOf[ Vol_Ele ]; }
     }
     Constraint {
       { NameOfCoef vn; EntityType NodesOf; NameOfConstraint Dirichlet_Ele; }
@@ -54,16 +45,28 @@ FunctionSpace {
 }
 
 Jacobian {
-  { Name Vol; Case { { Region All; Jacobian Vol; } } }
+	 { Name Vol                      ;
+	 Case {
+//              { Region AllRect; Jacobian Sur; } 
+	      { Region Vol_Ele                    ; Jacobian Vol; } }
+	 }
 }
 
 Integration {
-  { Name Int;
+  { Name Int; 
     Case { 
-      { Type Gauss;
+      { Type Gauss; 
         Case { 
-          { GeoElement Triangle;   NumberOfPoints 4; }
-          { GeoElement Quadrangle; NumberOfPoints 4; }
+          // 3D Elements
+          { GeoElement Tetrahedron ; NumberOfPoints 4 ; }
+          { GeoElement Hexahedron  ; NumberOfPoints 8 ; }
+          { GeoElement Prism       ; NumberOfPoints 6 ; }
+          { GeoElement Pyramid     ; NumberOfPoints 8 ; } // <-- The fix
+
+          // 2D & 1D Elements (for your boundary conditions)
+          { GeoElement Triangle    ; NumberOfPoints 3 ; }
+          { GeoElement Quadrangle  ; NumberOfPoints 4 ; }
+          { GeoElement Line        ; NumberOfPoints 2 ; }
         }
       }
     }
@@ -126,4 +129,19 @@ PostOperation {
   }
 }
 
+PostProcessing {
+  { Name DebugCoords; NameOfFormulation Electrostatics_v;
+    Quantity {
+      // 1. Wrap the Z[] function into a named Quantity
+      { Name My_Z_Coord; Value { Term { [ Z[] ]; In Vol_Ele; } } }
+    }
+  }
+}
   
+PostOperation {
+  { Name Print_Z; NameOfPostProcessing DebugCoords;
+    Operation {
+      Print[ My_Z_Coord, OnElementsOf Vol_Ele, File "z.txt" ];
+    }
+  }
+}
