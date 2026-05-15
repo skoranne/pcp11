@@ -1,0 +1,7 @@
+function fib(n) =
+if (n <= 1) then n
+else 
+  let vals = {fib(i) : i in [n-1, n-2]}
+  in sum(vals);
+
+
