@@ -105,3 +105,15 @@ This is SBCL 2.2.1, an implementation of ANSI Common Lisp.
 
 <Nesl> 
 
+meshio convert Examples/3D/CavityRampExtruded/CavityRamp3D.inp a.msh --input-format abaqus --output-format gmsh22
+
+   \begin{RUN_PARAMETERS}
+      mesh file name   = Examples/3D/CavityRampExtruded/CavityRamp3D.inp
+      plot file name   = Examples/3D/CavityRampExtruded/CavityRamp3D.tec
+      stats file name  = none
+      mesh file format = ABAQUS
+      polynomial order = 4
+      plot file format = sem
+   \end{RUN_PARAMETERS}
+
+
