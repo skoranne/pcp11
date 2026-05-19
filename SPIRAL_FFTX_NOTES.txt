@@ -173,4 +173,53 @@ spiral> T_mat;
 [ [ 2, -1, 0, 0 ], [ -1, 2, -1, 0 ], [ 0, -1, 2, -1 ], [ 0, 0, -1, 2 ] ]
 spiral> MatAMat(DPP) = T_mat;
 true
+Make sure you are using LEON method:
+UseLeon := true;;
+
+Rs := PermPermSymmetry(M);
+Rs[1]^M = Rs[2] if everything works out.
+To see the ImageRep
+MatARepARep(SRs[2]);
+Matrix automorphism group computation complete.
+
+  Matrix automorphism group has order 2.
+
+  Base:                    1
+  Basic orbit lengths:     2
+
+
+Time:   RBase construction:   0.36 sec
+        Group optimization:   0.08 sec
+        Backtrack search:     0.29 sec
+        TOTAL:                0.73 sec
+
+#I   Exec("./bin/../namespaces/arep/bin/leonout <leontmp.grp >leontmp.in");
+#I   Reading permgroup from 'leontmp.in'.
+#I   Building the permgroup with base and SGS.
+#I   searching for few generators
+#I   checking 1 generators for PermPermSym
+[ ARepByImages(
+  GroupWithGenerators( [ g ] ),
+  [ (1,4)(2,3)
+  ],
+  4, # degree
+  "hom"
+), ARepByImages(
+  GroupWithGenerators( [ g ] ),
+  [ (1,4)(2,3)
+  ],
+  4, # degree
+  "hom"
+) ]
+
+The Matrix permutation is (1,4),(2,3) giving a 1 in Row 1 Col 4, and so on.
+spiral> MatARepARep(SRs[2]);           
+ARepByImages(
+  GroupWithGenerators( [ g ] ),
+  [ [ [ 0, 0, 0, 1 ], [ 0, 0, 1, 0 ], [ 0, 1, 0, 0 ], [ 1, 0, 0, 0 ] ]
+  ],
+  "hom"
+)
+Once you have Rs decomposition you can also do
+DMR := DecompositionMonRep(Rs[1]);
 
