@@ -291,7 +291,7 @@ function simulate_rka(; d_out=128, d_in=64, r=8, batch=32,
         mse = sum(abs2, Ŷ .- Y) / batch
         kapA = kaporin_proxy(A_, ε)      # row‑wise Gram
         kapB = kaporin_proxy(B_', ε)     # column‑wise Gram (B' is r×d_out)
-        total = mse + λ * (kapA + kapB)
+        total = mse - λ * (kapA + kapB)
         return total, (mse, kapA, kapB)
     end
 
@@ -355,8 +355,8 @@ end
 # --------------------------------------------------------------
 # 4️⃣ Demo – compare “no regulariser” vs “with Kaporin”
 # --------------------------------------------------------------
-res_no  = simulate_rka(d_out = 18944, d_in=3584,λ=0.0, opt=:adam, steps=800, record_every=5)
-res_reg = simulate_rka(d_out = 18944, d_in=3584,λ=0.1, opt=:adam, steps=800, record_every=5)
+@inbounds res_no  = simulate_rka(d_out = 18944, d_in=3584,r=16, λ=0.0, opt=:adam, steps=800, record_every=10)
+@inbounds res_reg = simulate_rka(d_out = 18944, d_in=3584,r=16, λ=0.1, opt=:adam, steps=800, record_every=10)
 
 # --------------------------------------------------------------
 # 5️⃣ Simple visualisation (requires Plots.jl)
