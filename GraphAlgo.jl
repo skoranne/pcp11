@@ -43,6 +43,11 @@ function Laplacian(size;dimension=2,order=2)
     D  = FourthOrderDifferentialOperator(size)
     return ( kron(D,In,In) + kron(In,D,In) + kron(In,In,D) )
 end
+function Laplacian2D(size;dimension=2,order=2)
+    In = spdiagm( 0 => ones(MyFloat,size) )
+    D  = FourthOrderDifferentialOperator(size)
+    return ( kron(D,In) + kron(In,D) );
+end
 
 function Res(N)
     In = spdiagm( 0 => ones(MyFloat,N) )

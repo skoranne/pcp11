@@ -1,6 +1,6 @@
 ################################################################################
 # File    : KaporinDefence.jl
-# Author  : Sandeep Koranne and Advay Koranne (C) 2026. All rights reserved.
+# Author  : Sandeep Koranne (C) 2026. All rights reserved.
 # Purpose : Experiment for Low rank adaptation using Kaporin condition number
 ################################################################################
 
