@@ -1,0 +1,71 @@
+--------------------------------------------------------------------------------
+                    How to use Github for personal projects
+--------------------------------------------------------------------------------
+
+# Authenticate (if you haven't already)
+gh auth login
+
+# Initialize your local git repo
+git init -b main
+git add . && git commit -m "Initial commit"
+
+# Create the repo on GitHub and push your local code
+gh repo create my-awesome-project --private --source=. --remote=origin --push
+
+gh issue create --title "Add user authentication" --body "Use JWT for login"
+
+================================================================================
+Create an issue
+================================================================================
+# Replace '1' with your actual issue number
+gh issue develop 1 --checkout
+
+Do normal, commit frequently
+git add .
+git commit -m "FOO"
+git commit -m "BAR"
+
+# Push your branch and create a PR automatically. 
+# --fill uses your commit messages to populate the PR title/body.
+gh pr create --fill
+gh pr view --web for WEB view
+
+Once you are done
+# Squash merge the PR, and delete the branch both locally and on GitHub
+gh pr merge --squash --delete-branch
+
+================================================================================
+The release
+================================================================================
+# Ensure you are on main and up to date
+git checkout main
+git pull
+
+# Create a tag and release. --generate-notes automatically lists your merged PRs!
+gh release create v1.0.0 --title "v1.0.0 - Authentication Release" --generate-notes
+
+
+
+git checkout --ours <path/to/file>
+git checkout --theirs <path/to/file>
+
+If your local changes are ready to be saved permanently, you can just commit them before merging.
+
+Stage and commit your work:
+
+git add .
+git commit -m "Save my local changes before merging"
+Perform your pull or merge:
+
+git pull
+
+
+git stash
+Perform your merge or pull:
+
+
+git pull
+Bring your shelved changes back:
+
+
+git stash pop
