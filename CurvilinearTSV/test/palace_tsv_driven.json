@@ -1,0 +1,78 @@
+{
+  "Problem": {
+    "Type": "Driven",
+    "Verbose": 2,
+    "Output": "postpro_tsv_driven"
+  },
+  "Model": {
+    "Mesh": "palace_tsv.msh",
+    "L0": 1.0e-6
+  },
+  "Domains": {
+    "Materials": [
+      {
+        "Attributes": [1],
+        "Permittivity": 1.0,
+        "Permeability": 1.0,
+        "LossTan": 0.0
+      }
+    ]
+  },
+  "Boundaries": {
+    "PEC": {
+      "Attributes": [3]
+    },
+    "Absorbing": {
+      "Attributes": [2],
+      "Order": 1
+    },
+    "LumpedPort": [
+      {
+        "Index": 1,
+        "R": 50.0,
+        "Excitation": 1,
+        "Attributes": [4],
+        "Direction": "+X"
+      },
+      {
+        "Index": 2,
+        "R": 50.0,
+        "Excitation": 2,
+        "Attributes": [5],
+        "Direction": "+X"
+      },
+      {
+        "Index": 3,
+        "R": 50.0,
+        "Excitation": 3,
+        "Attributes": [6],
+        "Direction": "+X"
+      },
+      {
+        "Index": 4,
+        "R": 50.0,
+        "Excitation": 4,
+        "Attributes": [7],
+        "Direction": "+X"
+      }
+    ]
+  },
+  "Solver": {
+    "Order": 1,
+    "Device": "CPU",
+    "Driven": {
+      "Samples": [
+        {
+          "Type": "Point",
+          "Freq": [60.0]
+        }
+      ]
+    },
+    "Linear": {
+      "Type": "Default",
+      "KSPType": "GMRES",
+      "Tol": 1.0e-6,
+      "MaxIts": 200
+    }
+  }
+}
