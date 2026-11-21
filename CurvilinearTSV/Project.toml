@@ -1,0 +1,31 @@
+name = "CurvilinearTSV"
+uuid = "7a4b9e12-5c31-4f88-a214-9e7c3d821f01"
+authors = ["Sandeep Koranne"]
+version = "0.1.0"
+
+[deps]
+ArnoldiMethod = "ec485272-7323-5ecc-a04f-4719b315124d"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[weakdeps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+CUDSS = "45b445bb-4962-46a0-9369-b4df9d0f772e"
+cuTile = "0dea8319-8c4a-4662-a73d-20234d115b9a"
+
+[extensions]
+CurvilinearTSVCUDAExt = "CUDA"
+CurvilinearTSVcuTileExt = ["CUDA", "cuTile"]
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
+
+[targets]
+test = ["Test", "TestItems"]
