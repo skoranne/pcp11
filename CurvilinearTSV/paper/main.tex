@@ -293,16 +293,11 @@ All tests pass with 20/20 success rate on CPU backend.
 
 \section{60 GHz S-Parameter Baseline and Validation Status}
 
-\subsection{Corrected Analytical RLC Baseline}
+\subsection{Corrected Analytical RLC/MTL Baselines}
 
-The initial \texttt{tsv\_bem\_fix.jl} script was invalid (dead electrostatic solve, wrong port mapping as adjacent sub-panels, geometry inside keep-out, unphysical inductance scaling with 112/144 negative eigenvalues, and 4/9 zero coupling blocks). A corrected analytical microstrip RLC baseline (\texttt{CurvilinearTSV/test/tsv\_bem\_corrected.jl}) was created with:
-\begin{itemize}
-  \item Four trace ports outside TSV keep-out (verified by geometry check).
-  \item Per-length $R'(\omega)$ with skin effect, $L'$, $C'$ microstrip estimates; explicit $Z_0=50\,\Omega$ S-parameter extraction.
-  \item Reciprocity and passivity checks: $\max|S-S^T|=9.47\times10^{-19}$, $\sigma_{\max}(S)=0.999594 \le 1$.
-\end{itemize}
+The initial \texttt{tsv\_bem\_fix.jl} script was invalid (dead electrostatic solve, wrong port mapping as adjacent sub-panels, geometry inside keep-out, unphysical inductance scaling with 112/144 negative eigenvalues, and 4/9 zero coupling blocks). Two corrected analytical baselines were created:
 
-At 60~GHz, the corrected baseline gives (dB):
+\textbf{(1) 4-port trace RLC baseline} (\texttt{tsv\_bem\_corrected.jl}, 60~GHz): ports outside keep-out verified; per-length $R'(\omega)$ with skin effect, $L'$, $C'$ microstrip estimates; $Z_0=50\,\Omega$ S extraction. Checks: $\max|S-S^T|=9.47\times10^{-19}$, $\sigma_{\max}(S)=0.999594\le 1$.
 \begin{center}
 \begin{tabular}{rrrr}
 \toprule
@@ -312,15 +307,20 @@ $S_{11}$ & $S_{21}$ & $S_{31}$ & $S_{41}$ \\
 \bottomrule
 \end{tabular}
 \end{center}
-\noindent\textbf{Caveat:} This is an analytical baseline, not a full 3D BEM or full-wave extraction. It is not a validated TSV coupling result.
 
-\subsection{Palace Full-Wave Attempt (Not Yet Valid)}
+\textbf{(2) simple2 MTL cross-check} (\texttt{tsv\_mtl\_simple2.jl}, 1~GHz, same geometry intent as Palace simple2): TL+via pi-model ABCD, $Z_0=50\,\Omega$. Result: $S_{11}=-35.03$~dB, $S_{21}=-0.143$~dB, $\max|S-S^T|=3.33\times10^{-16}$, $\sigma_{\max}(S)=0.997$, passive. Palace simple2 gives $S_{11}=-4.40$~dB, $S_{21}=-30.58$~dB, error norm 0.176. \textbf{Large discrepancy indicates port-definition/model mismatch; not a validated cross-check.}
 
-A box-based 2-port TSV model (\texttt{test/palace\_tsv\_2port\_v2.geo/.msh/.json}) was built with Si ($\varepsilon_r=11.7,\sigma=10$~S/m), SiO$_2$ ($\varepsilon_r=3.9$), Cu ($\sigma=5.8\times10^7$~S/m), PEC ground, absorbing boundary, and lumped ports. Multiple debug iterations fixed critical issues: PEC-on-material-interface tagging (all internal interfaces were wrongly PEC), bottom-gap misclassification as ground (shorting port 2), and port-surface placement. Palace v0.19.0 completes, but latest run remains non-physical ($S_{11}\approx -7.5\times10^{-5}$~dB, $S_{21}\approx -257$~dB, error-indicator norm 0.909), indicating remaining port-bridging/mesh-boundary issues.
+\noindent\textbf{Caveat:} These are analytical baselines, not 3D full-wave/BEM extractions.
 
-A v3 edge-port redesign (\texttt{test/palace\_tsv\_2port\_v3.geo}) attempted to place lumped ports on outer +X/$-$X boundaries with explicit port-region refinement. Gmsh OCC fragmentation produced invalid mesh topology for Palace/MFEM (``Interior triangular face found connecting elements''), blocking execution. \textbf{All Palace results remain invalid; excluded from publication claims.}
+\subsection{Palace Full-Wave Attempts (Not Yet Validated)}
 
-The earlier 4-port Palace run (\texttt{postpro\_tsv\_driven/}) is also invalid: mistagged port sidewalls, 93.5\% power loss in a lossless domain ($\sum|S_{i1}|^2=0.065$), $Z_{\mathrm{in}}\approx 84+3.2j\,\Omega$, error-indicator norm 0.871, no Si/SiO$_2$/loss/ground return.
+\textbf{v2 TSV model} (\texttt{test/palace\_tsv\_2port\_v2}): Si/SiO$_2$/Cu/PEC/absorbing, lumped ports. Fixed PEC-on-interface and bottom-gap misclassification. Result: $S_{11}=-7.5\times10^{-5}$~dB, $S_{21}=-257$~dB, error norm 0.909. \textbf{Invalid} (port bridging/mesh).
+
+\textbf{v3 edge-port TSV} (\texttt{test/palace\_tsv\_2port\_v3}): Gmsh OCC fragmentation produced invalid MFEM mesh topology (``Interior triangular face found connecting elements''). \textbf{Blocked}.
+
+\textbf{simple2 edge-port TSV-like} (\texttt{test/palace\_tsv\_simple2}, 1~GHz, Order~1, 102k tets): Palace completed with $S_{11}=-4.40$~dB, $S_{21}=-30.58$~dB, error norm 0.176. Physically finite but poor transmission indicates port-definition/mesh issues remain; not converged ($<10^{-2}$ target unmet) and not cross-validated. \textbf{Not publication-grade.}
+
+The earlier 4-port Palace run (\texttt{postpro\_tsv\_driven/}) is invalid: mistagged port sidewalls, 93.5\% power loss in lossless domain, $Z_{\mathrm{in}}\approx 84+3.2j\,\Omega$, error norm 0.871.
 
 \subsection{Adversarial Audit Summary}
 
@@ -332,7 +332,7 @@ Component & Status \\
 Julia BEM script & \textbf{Invalid}. Dead electrostatic solve; wrong port mapping; geometry collision; unphysical $L$ matrix (112/144 negative eigenvalues, $\sim9\times10^6\times$ scaling error); 4/9 zero coupling blocks. \\
 Palace cross-check & \textbf{Invalid}. Broken port tagging; 93.5\% loss in lossless domain; coarse Order 1 mesh; missing Si/SiO$_2$/Cu loss/ground. \\
 gds2mesh & \textbf{Improved/partially fixed}. Micron model units, strict Gmsh exit, physical-tag tests, hierarchy flattening, Palace surface tagging options; 30/30 tests pass. Polygon-vertex preservation still limited by bbox C API. \\
-Corrected RLC baseline & \textbf{Runnable baseline}. Analytical only; passive/reciprocal; not full-wave validated. \\
+Corrected RLC/MTL baselines & \textbf{Runnable}. Analytical only; passive/reciprocal; simple2 MTL-vs-Palace shows large discrepancy (port/model mismatch), not validated. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -362,7 +362,7 @@ gmsh -3 out.geo -o out.msh -format msh2
 
 \section{Conclusion}
 
-This draft documents the CurvilinearTSV formulation, an adversarial audit of the initial 60~GHz S-parameter pipeline, and remediation steps. The initial Julia BEM and Palace S-parameter results are invalid and must not be used. gds2mesh has been improved (micron units, strict Gmsh exit, physical-tag tests, hierarchy flattening, Palace absorbing/PEC surface tagging) and tested (30/30). A corrected analytical RLC baseline is provided with passivity/reciprocity checks. Palace full-wave validation remains blocked by port-bridging/mesh-topology issues after multiple debug iterations; no validated 60~GHz cross-check is reported.
+This draft documents the CurvilinearTSV formulation, an adversarial audit of the initial 60~GHz S-parameter pipeline, and remediation steps. The initial Julia BEM and Palace S-parameter results are invalid and must not be used. gds2mesh has been improved (micron units, strict Gmsh exit, physical-tag tests, hierarchy flattening, Palace absorbing/PEC surface tagging) and tested (30/30). A corrected analytical RLC baseline is provided with passivity/reciprocity checks. Palace full-wave validation remains not validated (v2 non-physical; v3 mesh-topology abort; simple2 physical but unconverged and mismatched to MTL, error norm 0.176). No validated 60~GHz cross-check is reported.
 
 \appendix
 
@@ -370,9 +370,9 @@ This draft documents the CurvilinearTSV formulation, an adversarial audit of the
 
 \begin{itemize}
 \item Invalid BEM script/output: \texttt{CurvilinearTSV/test/tsv\_bem\_fix.jl}, \texttt{tsv\_sparameters\_60ghz.csv}
-\item Corrected analytical baseline: \texttt{CurvilinearTSV/test/tsv\_bem\_corrected.jl}, \texttt{tsv\_sparameters\_60ghz\_corrected.csv}
+\item Corrected analytical baselines: \texttt{tsv\_bem\_corrected.jl}, \texttt{tsv\_sparameters\_60ghz\_corrected.csv}, \texttt{tsv\_mtl\_simple2.jl}
 \item Palace invalid run: \texttt{CurvilinearTSV/test/palace\_tsv.geo}, \texttt{palace\_tsv\_driven.json}, \texttt{postpro\_tsv\_driven/port-S.csv}
-\item Palace WIP: \texttt{CurvilinearTSV/test/palace\_tsv\_2port\_v2.geo/.msh/.json}, \texttt{postpro\_tsv\_2port\_v2/}
+\item Palace WIP: \texttt{palace\_tsv\_2port\_v2.*}, \texttt{postpro\_tsv\_2port\_v2/}; \texttt{palace\_tsv\_2port\_v3.*}; \texttt{palace\_tsv\_simple2.*}, \texttt{postpro\_tsv\_simple2/}
 \item gds2mesh: \texttt{VLSI\_LAYOUT/src/gds2mesh/} (commits \texttt{03ec55a}, \texttt{4982ecf}), 30/30 tests
 \item Comparison audit report: \texttt{CurvilinearTSV/paper/comparison\_report.tex/pdf}
 \end{itemize}

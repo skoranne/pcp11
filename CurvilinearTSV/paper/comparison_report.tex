@@ -144,7 +144,7 @@ The apparent agreement is coincidental. Both pipelines contain fatal defects and
   \item \textbf{93.5\% power loss in lossless domain:} $\sum_i |S_{i1}|^2=0.065$ with PEC+Air+LossTan=0; $Z_{\mathrm{in}}\approx 84+3j\,\Omega$. Caused by mis-tagged resistive sleeve ports, no ground return, and absorbing boundary at $0.016\lambda_0$.
   \item \textbf{Under-resolved/coarse:} Order~1, 18,780 tets, error-indicator norm 0.871 (target 0.01), single tet across trace thickness.
   \item \textbf{Missing physics:} no Si ($\varepsilon_r=11.7$, $\sigma=10$~S/m), no SiO$_2$, no Cu loss, no return/ground reference; geometry/topology not equivalent to BEM script.
-  \item \textbf{v2/v3 debug attempts:} v2 fixed PEC-on-interface and bottom-gap misclassification but remained non-physical ($S_{11}\approx -7.5\times10^{-5}$~dB, $S_{21}\approx -257$~dB, error norm 0.909). v3 edge-port redesign hit Gmsh OCC fragmentation mesh-topology errors in Palace/MFEM. No valid Palace cross-check produced.
+  \item \textbf{v2/v3/simple2 attempts:} v2 fixed PEC-on-interface and bottom-gap misclassification but remained non-physical ($S_{11}\approx -7.5\times10^{-5}$~dB, $S_{21}\approx -257$~dB, error norm 0.909). v3 edge-port redesign hit Gmsh OCC mesh-topology errors. simple2 (1~GHz, Order~1) completed with $S_{11}=-4.40$~dB, $S_{21}=-30.58$~dB, error norm 0.176, but MTL baseline for same intent gives $S_{11}=-35.03$~dB, $S_{21}=-0.143$~dB (passive/reciprocal) --- large discrepancy, not validated.
 \end{itemize}
 
 \subsection*{gds2mesh status (improved)}
