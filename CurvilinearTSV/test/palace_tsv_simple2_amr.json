@@ -1,0 +1,26 @@
+{
+  "Problem": { "Type": "Driven", "Verbose": 1, "Output": "postpro_tsv_simple2_amr" },
+  "Model": { "Mesh": "palace_tsv_simple2.msh", "L0": 1.0e-6,
+    "Refinement": { "Tol": 1.0e-2, "MaxIts": 1, "MaxSize": 500000, "UpdateFraction": 0.7 }
+  },
+  "Domains": { "Materials": [
+    { "Attributes": [1], "Permittivity": 1.0, "Permeability": 1.0, "LossTan": 0.0 },
+    { "Attributes": [2], "Permittivity": 11.7, "Permeability": 1.0, "Conductivity": 10.0 },
+    { "Attributes": [3], "Permittivity": 3.9, "Permeability": 1.0, "LossTan": 0.0 },
+    { "Attributes": [4], "Permittivity": 1.0, "Permeability": 1.0, "Conductivity": 5.8e7 },
+    { "Attributes": [5], "Permittivity": 1.0, "Permeability": 1.0, "Conductivity": 5.8e7 },
+    { "Attributes": [6], "Permittivity": 1.0, "Permeability": 1.0, "Conductivity": 5.8e7 }
+  ]},
+  "Boundaries": {
+    "PEC": { "Attributes": [11] },
+    "Absorbing": { "Attributes": [10], "Order": 2 },
+    "LumpedPort": [
+      { "Index": 1, "R": 50.0, "Excitation": 1, "Attributes": [12], "Direction": "+Z" },
+      { "Index": 2, "R": 50.0, "Attributes": [13], "Direction": "+Z" }
+    ]
+  },
+  "Solver": { "Order": 2, "Device": "CPU",
+    "Driven": { "Samples": [ { "Type": "Point", "Freq": [60.0] } ] },
+    "Linear": { "Type": "Default", "KSPType": "GMRES", "Tol": 1.0e-6, "MaxIts": 300 }
+  }
+}
