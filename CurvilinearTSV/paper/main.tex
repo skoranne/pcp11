@@ -3,6 +3,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{geometry}
+\usepackage{booktabs}
 \geometry{margin=1in}
 
 \title{Curvilinear TSV Electrostatics Solver: \\
@@ -290,81 +291,88 @@ The test suite includes:
 
 All tests pass with 20/20 success rate on CPU backend.
 
-\section{60 GHz HBM S-Parameter Extraction}
+\section{60 GHz S-Parameter Baseline and Validation Status}
 
-For high-frequency analysis up to 60 GHz, we extract S-parameters from the RCWG model:
+\subsection{Corrected Analytical RLC Baseline}
 
-\begin{equation}
-\mathbf{V} = \mathbf{Z}(\omega) \mathbf{I}, \quad \mathbf{Z}(\omega) = \mathbf{R} + j \omega \mathbf{L} + \frac{1}{j \omega} \mathbf{C}^{-1}
-\end{equation}
+The initial \texttt{tsv\_bem\_fix.jl} script was invalid (dead electrostatic solve, wrong port mapping as adjacent sub-panels, geometry inside keep-out, unphysical inductance scaling with 112/144 negative eigenvalues, and 4/9 zero coupling blocks). A corrected analytical microstrip RLC baseline (\texttt{CurvilinearTSV/test/tsv\_bem\_corrected.jl}) was created with:
+\begin{itemize}
+  \item Four trace ports outside TSV keep-out (verified by geometry check).
+  \item Per-length $R'(\omega)$ with skin effect, $L'$, $C'$ microstrip estimates; explicit $Z_0=50\,\Omega$ S-parameter extraction.
+  \item Reciprocity and passivity checks: $\max|S-S^T|=9.47\times10^{-19}$, $\sigma_{\max}(S)=0.999594 \le 1$.
+\end{itemize}
 
-The scattering matrix is:
+At 60~GHz, the corrected baseline gives (dB):
+\begin{center}
+\begin{tabular}{rrrr}
+\toprule
+$S_{11}$ & $S_{21}$ & $S_{31}$ & $S_{41}$ \\
+\midrule
+-0.00 & -71.31 & -65.22 & -65.22 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\noindent\textbf{Caveat:} This is an analytical baseline, not a full 3D BEM or full-wave extraction. It is not a validated TSV coupling result.
 
-\begin{equation}
-\mathbf{S} = (\mathbf{Z} + \mathbf{Z}_0)^{-1} (\mathbf{Z} - \mathbf{Z}_0)
-\end{equation}
+\subsection{Palace Full-Wave Attempt (Not Yet Valid)}
 
-where $\mathbf{Z}_0 = 50 \Omega$ is the characteristic impedance.
+A box-based 2-port TSV model (\texttt{test/palace\_tsv\_2port\_v2.geo/.msh/.json}) was built with Si ($\varepsilon_r=11.7,\sigma=10$~S/m), SiO$_2$ ($\varepsilon_r=3.9$), Cu ($\sigma=5.8\times10^7$~S/m), PEC ground, absorbing boundary, and lumped ports. Palace v0.19.0 completed but produced non-physical results ($S_{11}\approx -0.005$~dB, $S_{21}\approx -336$~dB, error-indicator norm 0.916), indicating remaining port/topology/mesh issues. \textbf{This result is invalid and excluded from publication claims.}
 
-\section{Symbolic Verification}
+The earlier 4-port Palace run (\texttt{postpro\_tsv\_driven/}) is also invalid: mistagged port sidewalls, 93.5\% power loss in a lossless domain ($\sum|S_{i1}|^2=0.065$), $Z_{\mathrm{in}}\approx 84+3.2j\,\Omega$, error-indicator norm 0.871, no Si/SiO$_2$/loss/ground return.
 
-All derivations are verified using the Wolfram Language evaluator MCP with session ID \texttt{Rw6f7gwG}. The Mathematica test suite \texttt{mems\_tsv\_tests.wlt} passes all 23 tests for:
+\subsection{Adversarial Audit Summary}
+
+\begin{center}
+\begin{tabular}{p{0.22\linewidth}p{0.68\linewidth}}
+\toprule
+Component & Status \\
+\midrule
+Julia BEM script & \textbf{Invalid}. Dead electrostatic solve; wrong port mapping; geometry collision; unphysical $L$ matrix (112/144 negative eigenvalues, $\sim9\times10^6\times$ scaling error); 4/9 zero coupling blocks. \\
+Palace cross-check & \textbf{Invalid}. Broken port tagging; 93.5\% loss in lossless domain; coarse Order 1 mesh; missing Si/SiO$_2$/Cu loss/ground. \\
+gds2mesh & \textbf{Fixed}. Micron model units, strict Gmsh exit, physical-tag tests; 30/30 tests pass. \\
+Corrected RLC baseline & \textbf{Runnable baseline}. Analytical only; passive/reciprocal; not full-wave validated. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{GDS/OASIS-to-Mesh Workflow}
+
+\texttt{gds2mesh}/\texttt{oas2mesh} (VLSI\_LAYOUT \texttt{src/gds2mesh}, commit \texttt{03ec55a}) converts GDSII/OASIS via \texttt{layoutdb} C-API to Gmsh 2D/3D \texttt{.geo}.
+
+\begin{verbatim}
+# GDS/OASIS -> 3D Gmsh .geo (micron model units by default)
+VLSI_LAYOUT/src/gds2mesh/bin/gds2mesh input.gds --dbu 1e-9 --dim 3 --out out.geo
+VLSI_LAYOUT/src/gds2mesh/bin/oas2mesh input.oas --dbu 1e-9 --dim 2 --out out.geo
+gmsh -3 out.geo -o out.msh -format msh2
+\end{verbatim}
+
+\noindent Verified: gds2mesh tests 30/30 pass; micron-scaled 3D output produces nonzero physical volume tags.
+
+\section{Required Work Before Submission}
 
 \begin{enumerate}
-\item Green's function identities ($\nabla^2 G\_2D = 0$, $\nabla^2 G\_3D = 0$ for $r > 0$)
-\item Biharmonic potential ($\nabla^2 \psi_{2D} = G_{2D}$, $\nabla^2 \psi_{3D} = G_{3D}$)
-\item Cylindrical depletion charge density verification
-\item Boundary jump relations for SLP/DLP/adjoint-DLP
-\item FourierStar2D uniqueness for small perturbations
+  \item Build geometry-matched, physically complete Palace model (Si/SiO$_2$/Cu/loss, explicit ground return, calibrated lumped/wave ports, absorbing boundary $\ge \lambda_{\mathrm{eff}}/4$ or shielded box).
+  \item Run Palace convergence: Order 1/2/3, mesh refinement, error-indicator norm $<10^{-2}$, passivity $\sigma_{\max}(S)\le 1$, reciprocity, lossless-energy check.
+  \item Replace analytical baseline with defensible extraction: correct Maxwell capacitance (BEM/FEM), frequency-dependent $R(\omega),L(\omega)$, MTL/ABCD S-parameters.
+  \item Validate against analytical/electrostatic baselines first, then broadband 0.1--60~GHz driven S-parameters with identical geometry/materials/ports.
+  \item Extend gds2mesh with hierarchy/polygon preservation and Palace physical-surface tagging (PEC, port, absorbing).
 \end{enumerate}
 
 \section{Conclusion}
 
-We present a comprehensive CAD solver for curvilinear TSV electrostatics with:
-
-\begin{itemize}
-\item Boundary integral equation formulations with exact jump relations
-\item Four physical regimes from MEMS PDE theory
-\item Voltage-dependent depletion capacitance
-\item GPU acceleration via CUDA.jl and cuTile.jl
-\item 60 GHz HBM S-parameter extraction
-\item Full symbolic verification via Mathematica MCP
-\end{itemize}
-
-Future work includes extension to full-wave electromagnetic solvers and machine learning-accelerated preconditioning.
+This draft documents the CurvilinearTSV formulation, an adversarial audit of the initial 60~GHz S-parameter pipeline, and remediation steps. The initial Julia BEM and Palace S-parameter results are invalid and must not be used. gds2mesh has been fixed and tested (30/30). A corrected analytical RLC baseline is provided with passivity/reciprocity checks, but full-wave 3D validation remains incomplete.
 
 \appendix
 
-\section{Julia Package Structure}
-
-The \texttt{CurvilinearTSV} package implements:
+\section{Reproducibility Artifacts}
 
 \begin{itemize}
-\item \texttt{Backends.jl}: Abstract backend interface with CPUBackend, CUDABackend, CuTileBackend
-\item \texttt{Geometry/Curves2D.jl}: Circle2D, Ellipse2D, Teardrop2D, FourierStar2D
-\item \texttt{Geometry/Surfaces3D.jl}: Sphere3D, sample\_sphere\_3d
-\item \texttt{Geometry/BoundaryConditions.jl}: Dirichlet, Neumann, Robin conditions
-\item \texttt{Geometry/Structures.jl}: TSV, liner, contact definitions
-\item \texttt{Quadrature/Quadrature2D.jl}: Spectral Kress quadrature, Duffy transformation
-\item \texttt{Quadrature/Quadrature3D.jl}: Triangular quadrature, adaptive refinement
-\item \texttt{Kernels/GreensFunctions.jl}: G2D, G3D, their gradients
-\item \texttt{Kernels/AssembleCPU.jl}: Matrix assembly with tiled layout
-\item \texttt{Kernels/LinearSolvers.jl}: Krylov subspace methods, Arnoldi iteration
-\item \texttt{Physics/Electrostatics.jl}: Capacitance extraction, Poisson solvers
-\end{itemize}
-
-\section{Mathematica Verification Scripts}
-
-The \texttt{mathematica/} directory contains:
-
-\begin{itemize}
-\item \texttt{01\_greens\_functions\_2d\_3d.wl}: Green's identity verification
-\item \texttt{02\_curvilinear\_geometry.wl}: Parameterization and curvature analysis
-\item \texttt{03\_depletion\_theory.wl}: Poisson equation solution for cylindrical geometry
-\item \texttt{04\_skin\_impedance\_rlgc.wl}: Skin effect and proximity effect calculations
-\item \texttt{05\_sparameters\_hbm.wl}: 60 GHz HBM S-parameter extraction
-\item \texttt{06\_mems\_esposito\_ghoussoub\_guo.wl}: MEMS PDE regime classification
-\item \texttt{mems\_tsv\_tests.wlt}: Comprehensive test suite (23 tests)
+\item Invalid BEM script/output: \texttt{CurvilinearTSV/test/tsv\_bem\_fix.jl}, \texttt{tsv\_sparameters\_60ghz.csv}
+\item Corrected analytical baseline: \texttt{CurvilinearTSV/test/tsv\_bem\_corrected.jl}, \texttt{tsv\_sparameters\_60ghz\_corrected.csv}
+\item Palace invalid run: \texttt{CurvilinearTSV/test/palace\_tsv.geo}, \texttt{palace\_tsv\_driven.json}, \texttt{postpro\_tsv\_driven/port-S.csv}
+\item Palace WIP: \texttt{CurvilinearTSV/test/palace\_tsv\_2port\_v2.geo/.msh/.json}, \texttt{postpro\_tsv\_2port\_v2/}
+\item gds2mesh: \texttt{VLSI\_LAYOUT/src/gds2mesh/} (commit \texttt{03ec55a}), 30/30 tests
+\item Comparison audit report: \texttt{CurvilinearTSV/paper/comparison\_report.tex/pdf}
 \end{itemize}
 
 \end{document}
