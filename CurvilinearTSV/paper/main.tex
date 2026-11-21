@@ -318,7 +318,7 @@ $S_{11}$ & $S_{21}$ & $S_{31}$ & $S_{41}$ \\
 
 \textbf{v3 edge-port TSV} (\texttt{test/palace\_tsv\_2port\_v3}): Gmsh OCC fragmentation produced invalid MFEM mesh topology (``Interior triangular face found connecting elements''). \textbf{Blocked}.
 
-\textbf{simple2 edge-port TSV-like} (\texttt{test/palace\_tsv\_simple2}, 1~GHz, Order~1, 102k tets): Palace completed with $S_{11}=-4.40$~dB, $S_{21}=-30.58$~dB, error norm 0.176. Physically finite but poor transmission indicates port-definition/mesh issues remain; not converged ($<10^{-2}$ target unmet) and not cross-validated. \textbf{Not publication-grade.}
+\textbf{simple2 edge-port TSV-like} (\texttt{test/palace\_tsv\_simple2}): 1~GHz Order~1 (25k tets, refined ports) Palace: $S_{11}=-4.40$~dB, $S_{21}=-30.56$~dB, error norm 0.187, $\max|S-S^T|=1.3\times10^{-9}$, $\sigma_{\max}=0.632$ (passive/reciprocal). 60~GHz Order~1: $S_{11}=-4.43$~dB, $S_{21}=-30.68$~dB, error norm 0.188. MTL baseline: 1~GHz $S_{11}=-34.59$~dB, $S_{21}=-0.144$~dB; 60~GHz $S_{11}=-4.30$~dB, $S_{21}=-2.39$~dB. $S_{11}$ is close at 60~GHz but $S_{21}$ differs by ~28~dB; error norm above $10^{-2}$ and mesh/order convergence not established. \textbf{Not publication-grade.}
 
 The earlier 4-port Palace run (\texttt{postpro\_tsv\_driven/}) is invalid: mistagged port sidewalls, 93.5\% power loss in lossless domain, $Z_{\mathrm{in}}\approx 84+3.2j\,\Omega$, error norm 0.871.
 

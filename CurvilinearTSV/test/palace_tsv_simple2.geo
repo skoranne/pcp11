@@ -55,7 +55,7 @@ For i In {0:#bnd()-1}
   cx=(xmin+xmax)/2; cy=(ymin+ymax)/2; cz=(zmin+zmax)/2; dx=xmax-xmin; dy=ymax-ymin; dz=zmax-zmin;
   onOuter=(xmin<-box+eps)+(xmax>box-eps)+(ymin<-box+eps)+(ymax>box-eps)+(zmin<-airBot-gndT-traceT+eps)+(zmax>h+airTop+eps); onOuter=(onOuter>0);
   isXFace=(dx<0.5); inPortY=(Abs(cy)<=traceW/2+eps);
-  inFullZ=(zmin<=h+traceT+5)*(zmax>=-gndT-traceT-5);
+  inFullZ=(zmin < h+traceT+eps)*(zmax > -gndT-eps);
   isP1=isXFace*(xmax>box-eps)*inPortY*inFullZ;
   isP2=isXFace*(xmin<-box+eps)*inPortY*inFullZ;
   If(isP1) p1()+={s}; EndIf
@@ -70,7 +70,7 @@ For i In {0:#gnd()-1}
     cx=(xmin+xmax)/2; cy=(ymin+ymax)/2; cz=(zmin+zmax)/2; dx=xmax-xmin; dy=ymax-ymin; dz=zmax-zmin;
     onOuter=(xmin<-box+eps)+(xmax>box-eps)+(ymin<-box+eps)+(ymax>box-eps)+(zmin<-airBot-gndT-traceT+eps)+(zmax>h+airTop+eps); onOuter=(onOuter>0);
     isXFace=(dx<0.5); inPortY=(Abs(cy)<=traceW/2+eps);
-    inFullZ=(zmin<=h+traceT+5)*(zmax>=-gndT-traceT-5);
+    inFullZ=(zmin < h+traceT+eps)*(zmax > -gndT-eps);
     isP1s=isXFace*(xmax>box-eps)*inPortY*inFullZ;
     isP2s=isXFace*(xmin<-box+eps)*inPortY*inFullZ;
     If((!onOuter)*(!isP1s)*(!isP2s)) pec()+={gs}; EndIf
@@ -81,5 +81,7 @@ If(#pec()>0) Physical Surface(11)={pec()}; EndIf
 If(#p1()>0) Physical Surface(12)={p1()}; EndIf
 If(#p2()>0) Physical Surface(13)={p2()}; EndIf
 Mesh.CharacteristicLengthMin=2.0; Mesh.CharacteristicLengthMax=10.0; Mesh.Algorithm3D=10;
-Field[1]=Box; Field[1].VIn=2.0; Field[1].VOut=10; Field[1].XMin=-box-1; Field[1].XMax=box+1; Field[1].YMin=-traceW-2; Field[1].YMax=traceW+2; Field[1].ZMin=-gndT-traceT-5; Field[1].ZMax=h+traceT+5;
-Background Field=1;
+Field[1]=Box; Field[1].VIn=1.0; Field[1].VOut=10; Field[1].XMin=-box-1; Field[1].XMax=-box+5; Field[1].YMin=-traceW-2; Field[1].YMax=traceW+2; Field[1].ZMin=-gndT-2; Field[1].ZMax=h+traceT+2;
+Field[2]=Box; Field[2].VIn=1.0; Field[2].VOut=10; Field[2].XMin=box-5; Field[2].XMax=box+1; Field[2].YMin=-traceW-2; Field[2].YMax=traceW+2; Field[2].ZMin=-gndT-2; Field[2].ZMax=h+traceT+2;
+Field[3]=Min; Field[3].FieldsList={1,2};
+Background Field=3;
