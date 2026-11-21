@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.12.12)  21 NOV 2026 15:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.12.12)  21 NOV 2026 15:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -521,10 +521,11 @@ all/bin/palace\OT1/cmr/m/n/10.95 ).
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [2] [3]
-Overfull \hbox (9.99237pt too wide) in paragraph at lines 153--154
-[]\OT1/cmr/m/n/10.95 Added: hi-er-ar-chy flat-ten-ing (\OT1/cmtt/m/n/10.95 ldb[
-]iterate[]boxes[]flat\OT1/cmr/m/n/10.95 /\OT1/cmtt/m/n/10.95 flatten=true\OT1/c
-mr/m/n/10.95 ); Palace physical-surface
+Overfull \hbox (15.23428pt too wide) in paragraph at lines 153--154
+\OT1/cmr/m/n/10.95 (\OT1/cmtt/m/n/10.95 ldb[]iterate[]polygons/flat\OT1/cmr/m/n
+/10.95 ), Ju-lia \OT1/cmtt/m/n/10.95 PolyElem\OT1/cmr/m/n/10.95 /\OT1/cmtt/m/n/
+10.95 get[]polygons\OT1/cmr/m/n/10.95 /\OT1/cmtt/m/n/10.95 write[]geo[]2d[]poly
+gons\OT1/cmr/m/n/10.95 , GDSII
  []
 
 [4] [5] (./comparison_report.aux)
@@ -553,7 +554,7 @@ xlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/tex
 live/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texli
 ve/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texliv
 e/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb>
-Output written on comparison_report.pdf (5 pages, 182310 bytes).
+Output written on comparison_report.pdf (5 pages, 183887 bytes).
 PDF statistics:
  149 PDF objects out of 1000 (max. 8388607)
  114 compressed objects within 2 object streams

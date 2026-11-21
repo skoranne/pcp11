@@ -80,8 +80,8 @@ If(#absb()>0) Physical Surface(10)={absb()}; EndIf
 If(#pec()>0) Physical Surface(11)={pec()}; EndIf
 If(#p1()>0) Physical Surface(12)={p1()}; EndIf
 If(#p2()>0) Physical Surface(13)={p2()}; EndIf
-Mesh.CharacteristicLengthMin=2.0; Mesh.CharacteristicLengthMax=10.0; Mesh.Algorithm3D=10;
-Field[1]=Box; Field[1].VIn=1.0; Field[1].VOut=10; Field[1].XMin=-box-1; Field[1].XMax=-box+5; Field[1].YMin=-traceW-2; Field[1].YMax=traceW+2; Field[1].ZMin=-gndT-2; Field[1].ZMax=h+traceT+2;
-Field[2]=Box; Field[2].VIn=1.0; Field[2].VOut=10; Field[2].XMin=box-5; Field[2].XMax=box+1; Field[2].YMin=-traceW-2; Field[2].YMax=traceW+2; Field[2].ZMin=-gndT-2; Field[2].ZMax=h+traceT+2;
+Mesh.CharacteristicLengthMin=1.5; Mesh.CharacteristicLengthMax=8.0; Mesh.Algorithm3D=10;
+Field[1]=Box; Field[1].VIn=0.7; Field[1].VOut=8; Field[1].XMin=-box-1; Field[1].XMax=-box+5; Field[1].YMin=-traceW-2; Field[1].YMax=traceW+2; Field[1].ZMin=-gndT-2; Field[1].ZMax=h+traceT+2;
+Field[2]=Box; Field[2].VIn=0.7; Field[2].VOut=8; Field[2].XMin=box-5; Field[2].XMax=box+1; Field[2].YMin=-traceW-2; Field[2].YMax=traceW+2; Field[2].ZMin=-gndT-2; Field[2].ZMax=h+traceT+2;
 Field[3]=Min; Field[3].FieldsList={1,2};
 Background Field=3;

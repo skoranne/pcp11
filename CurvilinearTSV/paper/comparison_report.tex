@@ -150,8 +150,8 @@ The apparent agreement is coincidental. Both pipelines contain fatal defects and
 \subsection*{gds2mesh status (improved)}
 \begin{itemize}
   \item Fixed: micron model units (\texttt{unit\_scale=1e6}) prevent OpenCASCADE $10^{-7}$ tolerance drops; strict Gmsh exit checks; physical-tag element assertions. Tests: 30/30 pass.
-  \item Added: hierarchy flattening (\texttt{ldb\_iterate\_boxes\_flat}/\texttt{flatten=true}); Palace physical-surface tagging options (\texttt{absorbing\_surfaces}, \texttt{pec\_volume\_names}).
-  \item Remaining gap: C API exposes bboxes only; full polygon-vertex preservation and robust port-surface tagging not yet implemented.
+  \item Added: hierarchy flattening; Palace absorbing/PEC surface tagging; polygon-vertex C API (\texttt{ldb\_iterate\_polygons/flat}), Julia \texttt{PolyElem}/\texttt{get\_polygons}/\texttt{write\_geo\_2d\_polygons}, GDSII BOUNDARY/PATH/BOX vertex storage.
+  \item Remaining gap: OASIS vertex parsing/storage, polygon-preserving 3D extrusion flow, robust port-surface tagging.
 \end{itemize}
 
 \section{Required Remediation Before Publication}

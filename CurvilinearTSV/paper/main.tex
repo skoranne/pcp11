@@ -331,7 +331,7 @@ Component & Status \\
 \midrule
 Julia BEM script & \textbf{Invalid}. Dead electrostatic solve; wrong port mapping; geometry collision; unphysical $L$ matrix (112/144 negative eigenvalues, $\sim9\times10^6\times$ scaling error); 4/9 zero coupling blocks. \\
 Palace cross-check & \textbf{Invalid}. Broken port tagging; 93.5\% loss in lossless domain; coarse Order 1 mesh; missing Si/SiO$_2$/Cu loss/ground. \\
-gds2mesh & \textbf{Improved/partially fixed}. Micron model units, strict Gmsh exit, physical-tag tests, hierarchy flattening, Palace surface tagging options; 30/30 tests pass. Polygon-vertex preservation still limited by bbox C API. \\
+gds2mesh & \textbf{Improved}. Micron units, strict Gmsh exit, physical-tag tests, hierarchy flattening, Palace surface tagging, polygon-vertex C API+GDSII vertex storage+Julia polygon writer; 30/30 tests pass. OASIS/full polygon-preserving 3D flow incomplete. \\
 Corrected RLC/MTL baselines & \textbf{Runnable}. Analytical only; passive/reciprocal; simple2 MTL-vs-Palace shows large discrepancy (port/model mismatch), not validated. \\
 \bottomrule
 \end{tabular}
@@ -357,7 +357,7 @@ gmsh -3 out.geo -o out.msh -format msh2
   \item Run Palace convergence: Order 1/2/3, mesh refinement, error-indicator norm $<10^{-2}$, passivity $\sigma_{\max}(S)\le 1$, reciprocity, lossless-energy check.
   \item Replace analytical baseline with defensible extraction: correct Maxwell capacitance (BEM/FEM), frequency-dependent $R(\omega),L(\omega)$, MTL/ABCD S-parameters.
   \item Validate against analytical/electrostatic baselines first, then broadband 0.1--60~GHz driven S-parameters with identical geometry/materials/ports.
-  \item Extend gds2mesh with full polygon-vertex preservation (C API currently provides bboxes) and robust Palace port-surface tagging. Hierarchy flattening and basic absorbing/PEC surface tagging have been added.
+  \item Complete gds2mesh polygon-vertex preservation for OASIS and 3D extrusion flow; add robust Palace port-surface tagging. C API polygon callbacks, GDSII vertex storage, Julia polygon writer, flattening, and absorbing/PEC tagging are implemented.
 \end{enumerate}
 
 \section{Conclusion}
@@ -373,7 +373,7 @@ This draft documents the CurvilinearTSV formulation, an adversarial audit of the
 \item Corrected analytical baselines: \texttt{tsv\_bem\_corrected.jl}, \texttt{tsv\_sparameters\_60ghz\_corrected.csv}, \texttt{tsv\_mtl\_simple2.jl}
 \item Palace invalid run: \texttt{CurvilinearTSV/test/palace\_tsv.geo}, \texttt{palace\_tsv\_driven.json}, \texttt{postpro\_tsv\_driven/port-S.csv}
 \item Palace WIP: \texttt{palace\_tsv\_2port\_v2.*}, \texttt{postpro\_tsv\_2port\_v2/}; \texttt{palace\_tsv\_2port\_v3.*}; \texttt{palace\_tsv\_simple2.*}, \texttt{postpro\_tsv\_simple2/}
-\item gds2mesh: \texttt{VLSI\_LAYOUT/src/gds2mesh/} (commits \texttt{03ec55a}, \texttt{4982ecf}), 30/30 tests
+\item gds2mesh: \texttt{VLSI\_LAYOUT/src/gds2mesh/} (commits \texttt{03ec55a}, \texttt{4982ecf}, \texttt{18ca3bc}), 30/30 tests
 \item Comparison audit report: \texttt{CurvilinearTSV/paper/comparison\_report.tex/pdf}
 \end{itemize}
 
