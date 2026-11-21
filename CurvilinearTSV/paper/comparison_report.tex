@@ -125,39 +125,42 @@ $S_{43}$ & -70.25 & -86.68 & 16.43 \\
 \end{tabular}
 \end{table}
 
-\paragraph{Interpretation.}
+\paragraph{Audit verdict: INVALID.}
+The apparent agreement is coincidental. Both pipelines contain fatal defects and the reported S-parameters must not be used for publication.
+
+\subsection*{Julia BEM fatal defects}
 \begin{itemize}
-  \item \textbf{Isolation trend agrees:} both solvers predict very weak cross-coupling ($< -68$~dB) at 60~GHz for this geometry.
-  \item \textbf{Reciprocity agrees:} both produce symmetric S-matrices.
-  \item \textbf{Reflection differs:} Julia BEM reports near-perfect match by construction of the impedance extraction; Palace reports $-11.9$~dB due to port/boundary/modeling choices. This should be resolved by calibrated port de-embedding and refined mesh before publication-quality absolute $S_{ii}$ claims.
-  \item \textbf{Absolute cross-coupling differs by ~2--16 dB:} expected given different formulations (BIE panel impedance extraction vs full-wave FEM), different port terminations, geometry simplifications, and coarse Palace mesh.
+  \item \textbf{Dead electrostatic solve:} \texttt{potentialMatrix} and \texttt{sol} are never used in \texttt{zMatrix}/\texttt{SMatrix}; no $\mathbf{C}^{-1}/(j\omega)$ term is present.
+  \item \textbf{Wrong port mapping:} the exported $4\times4$ is \texttt{SMatrix[1:4,1:4]} from a $144\times144$ panel matrix, i.e. four adjacent $0.33\,\mu$m sub-panels on one $2\times2\,\mu$m trace, not four TSV/trace ports.
+  \item \textbf{Geometry collision:} Top/Bottom Trace~1 are centered at TSV~2 axis ($d=0<10\,\mu$m Cu radius, violating $15\,\mu$m keep-out).
+  \item \textbf{Unphysical inductance:} diagonal $L_{ii}=1$~pH hardcoded; off-diagonal uses $\mu_0/(4\pi d)\times 10^{-6}$ (dimensionally wrong by $\sim 9\times 10^6\times$ at $d=0.33\,\mu$m). $L_{\mathrm{eff}}$ has 112/144 negative eigenvalues.
+  \item \textbf{Zero coupling blocks:} TSV--Bottom, Bottom--TSV, Top--Bottom, Bottom--Top blocks in \texttt{potentialMatrix} remain zero; top--bottom written into bottom--bottom then overwritten.
+  \item \textbf{Interpretation error:} $|S_{ii}|\approx -0$~dB in this model means near-total reflection (open circuit from $|Z|\gg Z_0$), not a good match.
 \end{itemize}
 
-\section{GDS/OASIS-to-Mesh Workflow (gds2mesh)}
-To avoid manual mesh rebuilding, a Julia converter was implemented at \texttt{VLSI\_LAYOUT/src/gds2mesh}:
+\subsection*{Palace model fatal defects}
 \begin{itemize}
-  \item Parses GDSII/OASIS through existing C++ \texttt{layoutdb} via \texttt{ccall}.
-  \item Generates Gmsh 2D and 3D extruded \texttt{.geo} files.
-  \item CLI wrappers: \texttt{gds2mesh}, \texttt{oas2mesh}.
-  \item Verified by 28 passing tests and an end-to-end GDS$\rightarrow$3D$\rightarrow$\texttt{.msh} run.
+  \item \textbf{Broken port tagging:} lumped-port surfaces are 35-triangle sidewall patches along the full 30~$\mu$m trace ends, with zero cross-sectional port faces (\texttt{palace\_tsv.msh} inspection).
+  \item \textbf{93.5\% power loss in lossless domain:} $\sum_i |S_{i1}|^2=0.065$ with PEC+Air+LossTan=0; $Z_{\mathrm{in}}\approx 84+3j\,\Omega$. Caused by mis-tagged resistive sleeve ports, no ground return, and absorbing boundary at $0.016\lambda_0$.
+  \item \textbf{Under-resolved/coarse:} Order~1, 18,780 tets, error-indicator norm 0.871 (target 0.01), single tet across trace thickness.
+  \item \textbf{Missing physics:} no Si ($\varepsilon_r=11.7$, $\sigma=10$~S/m), no SiO$_2$, no Cu loss, no return/ground reference; geometry/topology not equivalent to BEM script.
 \end{itemize}
 
-Example:
-\begin{lstlisting}[language=bash]
-VLSI_LAYOUT/src/gds2mesh/bin/gds2mesh input.gds --dbu 1e-9 --dim 3 --out out.geo
-gmsh -3 out.geo -o out.msh -format msh2
-\end{lstlisting}
-
-\section{Reproducibility Artifacts}
+\subsection*{gds2mesh defects (fixed in follow-up)}
 \begin{itemize}
-  \item Julia BEM: \texttt{CurvilinearTSV/test/tsv\_bem\_fix.jl}
-  \item Julia S-params: \texttt{CurvilinearTSV/test/tsv\_sparameters\_60ghz.csv}
-  \item Palace mesh/config: \texttt{CurvilinearTSV/test/palace\_tsv.geo}, \texttt{palace\_tsv\_driven.json}
-  \item Palace results: \texttt{CurvilinearTSV/test/postpro\_tsv\_driven/port-S.csv}
-  \item gds2mesh: \texttt{VLSI\_LAYOUT/src/gds2mesh/} (commit \texttt{ff8ce8b})
+  \item OpenCASCADE $10^{-7}$ tolerance silently dropped all micron-scale 3D conductors when written in meters; tests accepted empty air-only meshes. Fixed by micron model units (\texttt{unit\_scale=1e6}), strict Gmsh exit checks, and physical-tag element assertions.
 \end{itemize}
+
+\section{Required Remediation Before Publication}
+\begin{enumerate}
+  \item Build a geometry-matched, physically complete model: Si/SiO$_2$/Cu, explicit ground return, calibrated lumped/wave ports, absorbing boundary $\ge \lambda_{\mathrm{eff}}/4$ or shielded box.
+  \item Run Palace convergence: Order 1/2/3, mesh refinement, error-indicator norm $<10^{-2}$, passivity $\sigma_{\max}(S)\le 1$, reciprocity, and lossless-energy check.
+  \item Replace Julia script with defensible extraction: correct Maxwell capacitance (BEM/FEM), frequency-dependent $R(\omega),L(\omega)$, and MTL/ABCD S-parameters; include de-embedded port reference planes.
+  \item Validate against analytical/electrostatic baselines first (coax/TL capacitance, via impedance), then broadband 0.1--60~GHz driven S-parameters.
+  \item Report only validated data with mesh/order convergence plots, $\Delta S$ tables, and identical geometry/material/port definitions.
+\end{enumerate}
 
 \section{Conclusion}
-The Julia BEM and Palace full-wave simulations both indicate \textbf{strong isolation} ($< -68$~dB cross-coupling) and \textbf{reciprocal} behavior for the TSV/trace test structure at 60~GHz. Absolute reflection and cross-coupling magnitudes differ due to model formulation and port/boundary setup; for publication, the Palace model should be refined with calibrated ports, mesh convergence, and geometry-matched CAD to tighten quantitative agreement.
+\textbf{Do not submit the current S-parameter comparison.} The existing Julia BEM and Palace runs are non-physical due to port-mapping/geometry/inductance/extraction bugs (Julia) and port-tagging/loss/ground/mesh-resolution errors (Palace). The gds2mesh workflow is useful after the micron-scaling and strict-validation fixes, but publication requires a validated, converged, geometry-matched cross-check.
 
 \end{document}

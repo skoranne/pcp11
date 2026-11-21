@@ -11,13 +11,25 @@ with MEMS PDE Theory and 60 GHz HBM S-Parameter Extraction}
 \author{STMicroelectronics Physics Computing Group}
 \date{}
 
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-We present a comprehensive Julia-based CAD solver for 2D/3D Laplace and Poisson electrostatics equations in curvilinear through-silicon via (TSV) structures with voltage-dependent depletion capacitance. The solver implements boundary integral equation (BIE) formulations with single-layer potential (SLP), double-layer potential (DLP), and adjoint-DLP operators with exact boundary jump relations verified symbolically using Mathematica. The numerical implementation leverages CUDA and cuTile backends for GPU acceleration, with power-of-two tiled matrix layouts matching CPU and GPU implementations. We incorporate the Esposito--Ghoussoub--Guo (2010) MEMS PDE monograph framework for four physical regimes: elastic MEMS/compliant-liner, non-elastic MEMS/rigid-liner, coupled electro-mechanical, and purely dissipative systems. The package includes regression test suites with convergence verification, 60 GHz high-bandwidth memory (HBM) S-parameter extraction via RCWG models, and LaTeX documentation with full theoretical derivations. All symbolic derivations are verified using the Wolfram Language evaluator MCP, ensuring mathematical correctness from Green's identities through to capacitance matrix extraction.
+We present a comprehensive Julia-based CAD solver for 2D/3D Laplace and Poisson electrostatics equations in curvilinear through-silicon via (TSV) structures with voltage-dependent depletion capacitance. The solver implements boundary integral equation (BIE) formulations with single-layer potential (SLP), double-layer potential (DLP), and adjoint-DLP operators with exact boundary jump relations The numerical implementation leverages CUDA and cuTile backends for GPU acceleration, with power-of-two tiled matrix layouts matching CPU and GPU implementations. We incorporate the Esposito--Ghoussoub--Guo (2010) MEMS PDE monograph framework for four physical regimes: elastic MEMS/compliant-liner, non-elastic MEMS/rigid-liner, coupled electro-mechanical, and purely dissipative systems. The package includes regression test suites with convergence verification, 60 GHz high-bandwidth memory (HBM) S-parameter extraction via RCWG models, and LaTeX documentation with full theoretical derivations. All symbolic derivations are verified using the Wolfram Language evaluator MCP, ensuring mathematical correctness from Green's identities through to capacitance matrix extraction.
 \end{abstract}
+
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\textbf{DRAFT STATUS --- NOT PUBLICATION READY.}
+An adversarial audit identified fatal defects in the reported 60~GHz TSV S-parameter pipeline: dead electrostatic extraction in the Julia BEM script, wrong port mapping/geometry collision, unphysical inductance scaling, and an invalid Palace cross-check (93.5\% power loss in a lossless domain, mistagged ports, 87.1\% error-indicator norm, missing Si/SiO$_2$/loss/ground model). Numerical results in this draft are provisional until corrected, converged, and independently validated.}}
+\end{center}
+
 
 \section{Introduction}
 
@@ -38,25 +50,25 @@ We begin with Green's second identity for domains $\Omega \subset \mathbb{R}^d$ 
 For the Laplace equation $\nabla^2 \phi = 0$, we use the fundamental solution $G(\mathbf{x}, \mathbf{y})$ satisfying $-\nabla^2 G = \delta(\mathbf{x} - \mathbf{y})$:
 
 \begin{equation}
-G_2D(\mathbf{x}, \mathbf{y}) = \frac{1}{2\pi} \log \frac{1}{|\mathbf{x} - \mathbf{y}|}, \quad
-G_3D(\mathbf{x}, \mathbf{y}) = \frac{1}{4\pi |\mathbf{x} - \mathbf{y}|}
+G\_2D(\mathbf{x}, \mathbf{y}) = \frac{1}{2\pi} \log \frac{1}{|\mathbf{x} - \mathbf{y}|}, \quad
+G\_3D(\mathbf{x}, \mathbf{y}) = \frac{1}{4\pi |\mathbf{x} - \mathbf{y}|}
 \end{equation}
 
 \begin{theorem}[Green's Identity Verification]
-The fundamental solutions satisfy $\nabla^2 G_2D = 0$ and $\nabla^2 G_3D = 0$ for $\mathbf{x} \neq \mathbf{y}$, with singular behavior at $\mathbf{x} = \mathbf{y}$ given by the Dirac delta function.
+The fundamental solutions satisfy $\nabla^2 G\_2D = 0$ and $\nabla^2 G\_3D = 0$ for $\mathbf{x} \neq \mathbf{y}$, with singular behavior at $\mathbf{x} = \mathbf{y}$ given by the Dirac delta function.
 \end{theorem}
 
 \begin{proof}
 Using polar coordinates in 2D:
 
 \begin{equation}
-\nabla^2 G_2D = \frac{1}{r} \frac{\partial}{\partial r} \left(r \frac{\partial G_2D}{\partial r}\right) = \frac{1}{r} \frac{\partial}{\partial r} \left(r \cdot \frac{-1}{2\pi r}\right) = \frac{1}{r} \frac{\partial}{\partial r} \left(\frac{-1}{2\pi}\right) = 0
+\nabla^2 G\_2D = \frac{1}{r} \frac{\partial}{\partial r} \left(r \frac{\partial G\_2D}{\partial r}\right) = \frac{1}{r} \frac{\partial}{\partial r} \left(r \cdot \frac{-1}{2\pi r}\right) = \frac{1}{r} \frac{\partial}{\partial r} \left(\frac{-1}{2\pi}\right) = 0
 \end{equation}
 
 Similarly in 3D spherical coordinates:
 
 \begin{equation}
-\nabla^2 G_3D = \frac{1}{r^2} \frac{\partial}{\partial r} \left(r^2 \frac{\partial G_3D}{\partial r}\right) = \frac{1}{r^2} \frac{\partial}{\partial r} \left(r^2 \cdot \frac{1}{4\pi r^2}\right) = \frac{1}{r^2} \frac{\partial}{\partial r} \left(\frac{1}{4\pi}\right) = 0
+\nabla^2 G\_3D = \frac{1}{r^2} \frac{\partial}{\partial r} \left(r^2 \frac{\partial G\_3D}{\partial r}\right) = \frac{1}{r^2} \frac{\partial}{\partial r} \left(r^2 \cdot \frac{1}{4\pi r^2}\right) = \frac{1}{r^2} \frac{\partial}{\partial r} \left(\frac{1}{4\pi}\right) = 0
 \end{equation}
 
 \end{proof}
@@ -253,7 +265,7 @@ CUDA.jl GPU backend with block size $b = 2^m$, thread block size $b \times b$.
 \end{definition}
 
 \begin{definition}[CuTileBackend]
-cuTile.jl (CUDA 13 Tile IR, Blackwell sm_121) backend with tile dimensions $(t_m, t_n) = (2^p, 2^q)$.
+cuTile.jl (CUDA 13 Tile IR, Blackwell sm\_121) backend with tile dimensions $(t_m, t_n) = (2^p, 2^q)$.
 \end{definition}
 
 \begin{theorem}[Tile Layout Equivalence]
@@ -299,7 +311,7 @@ where $\mathbf{Z}_0 = 50 \Omega$ is the characteristic impedance.
 All derivations are verified using the Wolfram Language evaluator MCP with session ID \texttt{Rw6f7gwG}. The Mathematica test suite \texttt{mems\_tsv\_tests.wlt} passes all 23 tests for:
 
 \begin{enumerate}
-\item Green's function identities ($\nabla^2 G_2D = 0$, $\nabla^2 G_3D = 0$ for $r > 0$)
+\item Green's function identities ($\nabla^2 G\_2D = 0$, $\nabla^2 G\_3D = 0$ for $r > 0$)
 \item Biharmonic potential ($\nabla^2 \psi_{2D} = G_{2D}$, $\nabla^2 \psi_{3D} = G_{3D}$)
 \item Cylindrical depletion charge density verification
 \item Boundary jump relations for SLP/DLP/adjoint-DLP
@@ -330,7 +342,7 @@ The \texttt{CurvilinearTSV} package implements:
 \begin{itemize}
 \item \texttt{Backends.jl}: Abstract backend interface with CPUBackend, CUDABackend, CuTileBackend
 \item \texttt{Geometry/Curves2D.jl}: Circle2D, Ellipse2D, Teardrop2D, FourierStar2D
-\item \texttt{Geometry/Surfaces3D.jl}: Sphere3D, sample_sphere_3d
+\item \texttt{Geometry/Surfaces3D.jl}: Sphere3D, sample\_sphere\_3d
 \item \texttt{Geometry/BoundaryConditions.jl}: Dirichlet, Neumann, Robin conditions
 \item \texttt{Geometry/Structures.jl}: TSV, liner, contact definitions
 \item \texttt{Quadrature/Quadrature2D.jl}: Spectral Kress quadrature, Duffy transformation
