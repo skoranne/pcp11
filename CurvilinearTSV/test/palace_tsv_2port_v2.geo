@@ -104,8 +104,8 @@ For i In {0:#bnd()-1}
   isZFaceP = (dz < 0.5);
   inGapX1 = (xmin >= traceL-eps && xmax <= traceL+gap+eps);
   onPortY = (Abs(cy) <= traceW/2+eps);
-  isP1 = (isZFaceP && inGapX1 && onPortY && Abs(cz - h) < 0.6);
-  isP2 = (isZFaceP && inGapX1 && onPortY && Abs(cz - (-gndT-traceT)) < 0.6);
+  isP1 = (isZFaceP && inGapX1 && onPortY && Abs(cz - (h+traceT)) < 0.6);
+  isP2 = (isZFaceP && inGapX1 && onPortY && Abs(cz - (-gndT)) < 0.6);
   If (onOuter) absb() += {s};
   ElseIf (isP1) p1() += {s};
   ElseIf (isP2) p2() += {s};
@@ -124,8 +124,8 @@ For i In {0:#gnd()-1}
     isZFaceP = (dz < 0.5);
     inGapX1 = (xmin >= traceL-eps && xmax <= traceL+gap+eps);
     onPortY = (Abs(cy) <= traceW/2+eps);
-    isP1s = (isZFaceP && inGapX1 && onPortY && Abs(cz - h) < 0.6);
-    isP2s = (isZFaceP && inGapX1 && onPortY && Abs(cz - (-gndT-traceT)) < 0.6);
+    isP1s = (isZFaceP && inGapX1 && onPortY && Abs(cz - (h+traceT)) < 0.6);
+    isP2s = (isZFaceP && inGapX1 && onPortY && Abs(cz - (-gndT)) < 0.6);
     If (!onOuter && !isP1s && !isP2s) pec() += {gs}; EndIf
   EndFor
 EndFor
@@ -140,8 +140,8 @@ If (#p1() == 0 || #p2() == 0)
     isZ2p = (dz2 < 0.6);
     inGapX1b = (xmin2 >= traceL-0.5 && xmax2 <= traceL+gap+0.5);
     onY2b = (Abs(cy2) <= traceW/2+0.5);
-    isP1b = (isZ2p && inGapX1b && onY2b && Abs(cz2 - h) < 0.6);
-    isP2b = (isZ2p && inGapX1b && onY2b && Abs(cz2 - (-gndT-traceT)) < 0.6);
+    isP1b = (isZ2p && inGapX1b && onY2b && Abs(cz2 - (h+traceT)) < 0.6);
+    isP2b = (isZ2p && inGapX1b && onY2b && Abs(cz2 - (-gndT)) < 0.6);
     If (isP1b) p1() += {ss}; EndIf
     If (isP2b) p2() += {ss}; EndIf
   EndFor

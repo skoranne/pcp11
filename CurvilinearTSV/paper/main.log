@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.12.12)  21 NOV 2026 14:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.12.12)  21 NOV 2026 14:35
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -431,52 +431,52 @@ T1/cmr/bx/n/12 . \OT1/cmr/m/n/12 For the sin-gu-lar in-te-gral $[][] \OML/cmm/m
  []
 
 [5] [6]
-Underfull \hbox (badness 10000) in paragraph at lines 333--333
+Underfull \hbox (badness 10000) in paragraph at lines 335--335
 []\OT1/cmr/m/n/12 Corrected RLC
  []
 
 [7]
-Overfull \hbox (17.12935pt too wide) in paragraph at lines 340--341
+Overfull \hbox (17.12935pt too wide) in paragraph at lines 342--343
 \OT1/cmtt/m/n/12 gds2mesh\OT1/cmr/m/n/12 /\OT1/cmtt/m/n/12 oas2mesh \OT1/cmr/m/
 n/12 (VLSI[]LAYOUT \OT1/cmtt/m/n/12 src/gds2mesh\OT1/cmr/m/n/12 , com-mit \OT1/
 cmtt/m/n/12 03ec55a\OT1/cmr/m/n/12 ) con-verts GDSII/OASIS
  []
 
 
-Overfull \hbox (24.24522pt too wide) in paragraph at lines 347--347
+Overfull \hbox (24.24522pt too wide) in paragraph at lines 349--349
 []\OT1/cmtt/m/n/12 VLSI_LAYOUT/src/gds2mesh/bin/gds2mesh input.gds --dbu 1e-9 -
 -dim 3 --out out.geo[] 
  []
 
 
-Overfull \hbox (24.24522pt too wide) in paragraph at lines 347--347
+Overfull \hbox (24.24522pt too wide) in paragraph at lines 349--349
 []\OT1/cmtt/m/n/12 VLSI_LAYOUT/src/gds2mesh/bin/oas2mesh input.oas --dbu 1e-9 -
 -dim 2 --out out.geo[] 
  []
 
 [8]
-Overfull \hbox (67.47878pt too wide) in paragraph at lines 370--371
+Overfull \hbox (67.47878pt too wide) in paragraph at lines 372--373
 []\OT1/cmr/m/n/12 Invalid BEM script/output: \OT1/cmtt/m/n/12 CurvilinearTSV/te
 st/tsv[]bem[]fix.jl\OT1/cmr/m/n/12 , \OT1/cmtt/m/n/12 tsv[]sparameters[]60ghz.c
 sv 
  []
 
 
-Overfull \hbox (174.02878pt too wide) in paragraph at lines 371--372
+Overfull \hbox (174.02878pt too wide) in paragraph at lines 373--374
 []\OT1/cmr/m/n/12 Corrected an-a-lyt-i-cal base-line: \OT1/cmtt/m/n/12 Curvilin
 earTSV/test/tsv[]bem[]corrected.jl\OT1/cmr/m/n/12 , \OT1/cmtt/m/n/12 tsv[]spara
 meters[]60ghz[]corrected.csv 
  []
 
 
-Overfull \hbox (7.38312pt too wide) in paragraph at lines 372--373
+Overfull \hbox (7.38312pt too wide) in paragraph at lines 374--375
 []\OT1/cmr/m/n/12 Palace in-valid run: \OT1/cmtt/m/n/12 CurvilinearTSV/test/pal
 ace[]tsv.geo\OT1/cmr/m/n/12 , \OT1/cmtt/m/n/12 palace[]tsv[]driven.json\OT1/cmr
 /m/n/12 ,
  []
 
 
-Overfull \hbox (84.42432pt too wide) in paragraph at lines 373--374
+Overfull \hbox (84.42432pt too wide) in paragraph at lines 375--376
 []\OT1/cmr/m/n/12 Palace WIP: \OT1/cmtt/m/n/12 CurvilinearTSV/test/palace[]tsv[
 ]2port[]v2.geo/.msh/.json\OT1/cmr/m/n/12 , \OT1/cmtt/m/n/12 postpro[]tsv[]2port
 []v2/ 
@@ -514,7 +514,7 @@ texmf-dist/fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2022/te
 xmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/local/texlive/2022/tex
 mf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2022
 /texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
-Output written on main.pdf (9 pages, 265229 bytes).
+Output written on main.pdf (9 pages, 267128 bytes).
 PDF statistics:
  325 PDF objects out of 1000 (max. 8388607)
  273 compressed objects within 3 object streams

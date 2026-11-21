@@ -144,11 +144,14 @@ The apparent agreement is coincidental. Both pipelines contain fatal defects and
   \item \textbf{93.5\% power loss in lossless domain:} $\sum_i |S_{i1}|^2=0.065$ with PEC+Air+LossTan=0; $Z_{\mathrm{in}}\approx 84+3j\,\Omega$. Caused by mis-tagged resistive sleeve ports, no ground return, and absorbing boundary at $0.016\lambda_0$.
   \item \textbf{Under-resolved/coarse:} Order~1, 18,780 tets, error-indicator norm 0.871 (target 0.01), single tet across trace thickness.
   \item \textbf{Missing physics:} no Si ($\varepsilon_r=11.7$, $\sigma=10$~S/m), no SiO$_2$, no Cu loss, no return/ground reference; geometry/topology not equivalent to BEM script.
+  \item \textbf{v2/v3 debug attempts:} v2 fixed PEC-on-interface and bottom-gap misclassification but remained non-physical ($S_{11}\approx -7.5\times10^{-5}$~dB, $S_{21}\approx -257$~dB, error norm 0.909). v3 edge-port redesign hit Gmsh OCC fragmentation mesh-topology errors in Palace/MFEM. No valid Palace cross-check produced.
 \end{itemize}
 
-\subsection*{gds2mesh defects (fixed in follow-up)}
+\subsection*{gds2mesh status (improved)}
 \begin{itemize}
-  \item OpenCASCADE $10^{-7}$ tolerance silently dropped all micron-scale 3D conductors when written in meters; tests accepted empty air-only meshes. Fixed by micron model units (\texttt{unit\_scale=1e6}), strict Gmsh exit checks, and physical-tag element assertions.
+  \item Fixed: micron model units (\texttt{unit\_scale=1e6}) prevent OpenCASCADE $10^{-7}$ tolerance drops; strict Gmsh exit checks; physical-tag element assertions. Tests: 30/30 pass.
+  \item Added: hierarchy flattening (\texttt{ldb\_iterate\_boxes\_flat}/\texttt{flatten=true}); Palace physical-surface tagging options (\texttt{absorbing\_surfaces}, \texttt{pec\_volume\_names}).
+  \item Remaining gap: C API exposes bboxes only; full polygon-vertex preservation and robust port-surface tagging not yet implemented.
 \end{itemize}
 
 \section{Required Remediation Before Publication}
@@ -161,6 +164,6 @@ The apparent agreement is coincidental. Both pipelines contain fatal defects and
 \end{enumerate}
 
 \section{Conclusion}
-\textbf{Do not submit the current S-parameter comparison.} The existing Julia BEM and Palace runs are non-physical due to port-mapping/geometry/inductance/extraction bugs (Julia) and port-tagging/loss/ground/mesh-resolution errors (Palace). The gds2mesh workflow is useful after the micron-scaling and strict-validation fixes, but publication requires a validated, converged, geometry-matched cross-check.
+\textbf{Do not submit the current S-parameter comparison.} The existing Julia BEM and Palace runs are non-physical. gds2mesh has been improved (micron scaling, strict validation, flattening, basic Palace surface tagging; 30/30 tests) but still needs polygon-vertex preservation and robust port tagging. Publication requires a validated, converged, geometry-matched Palace-vs-Julia cross-check.
 
 \end{document}
