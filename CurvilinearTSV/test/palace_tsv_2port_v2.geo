@@ -26,18 +26,20 @@ BooleanDifference{ Volume{5}; }{ Volume{8}; Delete; }
 // Top signal metal: pad on TSV + trace + gap + ground ext
 Box(9)  = {-padW/2,-padW/2,h, padW, padW, traceT}; // pad
 Box(10) = {padW/2,-traceW/2,h, traceL-padW/2, traceW, traceT}; // trace
-Box(11) = {traceL,-traceW/2,h, gap, traceW, traceT}; // port 1 gap
+Box(11) = {traceL,-traceW/2,h, gap, traceW, traceT/2}; // port 1 gap bottom
+Box(18) = {traceL,-traceW/2,h+traceT/2, gap, traceW, traceT/2}; // port 1 gap top
 Box(12) = {traceL+gap,-traceW/2,h, box-(traceL+gap), traceW, traceT}; // ground ext
 
 // Bottom signal metal
 Box(13) = {-padW/2,-padW/2,-gndT-traceT, padW, padW, traceT}; // pad
 Box(14) = {padW/2,-traceW/2,-gndT-traceT, traceL-padW/2, traceW, traceT};
-Box(15) = {traceL,-traceW/2,-gndT-traceT, gap, traceW, traceT}; // port 2 gap
+Box(15) = {traceL,-traceW/2,-gndT-traceT, gap, traceW, traceT/2}; // port 2 gap bottom
+Box(19) = {traceL,-traceW/2,-gndT-traceT/2, gap, traceW, traceT/2}; // port 2 gap top
 Box(16) = {traceL+gap,-traceW/2,-gndT-traceT, box-(traceL+gap), traceW, traceT};
 // Connection from TSV bottom to bottom pad
 Box(17) = {-padW/2,-padW/2,-gndT, padW, padW, gndT}; // fills hole in ground z=-2..0
 
-v() = BooleanFragments{ Volume{1}; Delete; }{ Volume{2,3,4,5,6,9,10,11,12,13,14,15,16,17}; Delete; };
+v() = BooleanFragments{ Volume{1}; Delete; }{ Volume{2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19}; Delete; };
 
 air()={}; si()={}; ox()={}; cu()={}; gnd()={}; metal()={}; p1v()={}; p2v()={};
 For i In {0:#v()-1}
@@ -46,10 +48,10 @@ For i In {0:#v()-1}
   dx=xmax-xmin; dy=ymax-ymin; dz=zmax-zmin;
   cx=(xmin+xmax)/2; cy=(ymin+ymax)/2; cz=(zmin+zmax)/2;
   inSiZ = (zmin >= -0.1 && zmax <= h+0.1 && dz > 10);
-  inBotGndZ = (zmax <= 0.1 && dz <= gndT+0.5);
+  inBotGndZ = (zmin >= -gndT-0.1 && zmax <= 0.1 && dz <= gndT+0.5);
   inTopGndZ = (zmin >= h-0.1 && zmax <= h+gndT+0.1 && dz <= gndT+0.5);
-  inTopTrZ = (zmin >= h-0.1 && zmax <= h+traceT+0.1 && dz > gndT+0.5 || (zmin >= h-0.1 && zmax <= h+traceT+0.1 && dz > 0.5 && Abs(cy) <= padW/2+1));
-  inBotTrZ = (zmin >= -gndT-traceT-0.1 && zmax <= -gndT+0.1 && dz > 0.5);
+  inBotTrZ  = (zmin >= -gndT-traceT-0.1 && zmax <= -gndT+0.1 && dz > 0.5);
+  inTopTrZ  = (zmin >= h-0.1 && zmax <= h+traceT+0.1 && dz > 0.5);
   isOuterXY = (dx > 20 || dy > 20);
 
   If (inBotGndZ)
@@ -99,12 +101,11 @@ For i In {0:#bnd()-1}
   cx=(xmin+xmax)/2; cy=(ymin+ymax)/2; cz=(zmin+zmax)/2;
   dx=xmax-xmin; dy=ymax-ymin; dz=zmax-zmin;
   onOuter = (xmin < -box+eps || xmax > box-eps || ymin < -box+eps || ymax > box-eps || zmin < -airBot-gndT-traceT+eps || zmax > h+airTop+eps);
-  isYFace = (dy < 0.5);
+  isZFaceP = (dz < 0.5);
   inGapX1 = (xmin >= traceL-eps && xmax <= traceL+gap+eps);
-  inGapZ1 = (zmin >= h-eps && zmax <= h+traceT+eps);
-  inGapZ2 = (zmin >= -gndT-traceT-eps && zmax <= -gndT+eps);
-  isP1 = (isYFace && inGapX1 && inGapZ1 && Abs(cy) <= traceW/2+eps);
-  isP2 = (isYFace && inGapX1 && inGapZ2 && Abs(cy) <= traceW/2+eps);
+  onPortY = (Abs(cy) <= traceW/2+eps);
+  isP1 = (isZFaceP && inGapX1 && onPortY && Abs(cz - h) < 0.6);
+  isP2 = (isZFaceP && inGapX1 && onPortY && Abs(cz - (-gndT-traceT)) < 0.6);
   If (onOuter) absb() += {s};
   ElseIf (isP1) p1() += {s};
   ElseIf (isP2) p2() += {s};
@@ -120,12 +121,11 @@ For i In {0:#gnd()-1}
     cx=(xmin+xmax)/2; cy=(ymin+ymax)/2; cz=(zmin+zmax)/2;
     dx=xmax-xmin; dy=ymax-ymin; dz=zmax-zmin;
     onOuter = (xmin < -box+eps || xmax > box-eps || ymin < -box+eps || ymax > box-eps || zmin < -airBot-gndT-traceT+eps || zmax > h+airTop+eps);
-    isYFace = (dy < 0.5);
+    isZFaceP = (dz < 0.5);
     inGapX1 = (xmin >= traceL-eps && xmax <= traceL+gap+eps);
-    inGapZ1 = (zmin >= h-eps && zmax <= h+traceT+eps);
-    inGapZ2 = (zmin >= -gndT-traceT-eps && zmax <= -gndT+eps);
-    isP1s = (isYFace && inGapX1 && inGapZ1 && Abs(cy) <= traceW/2+eps);
-    isP2s = (isYFace && inGapX1 && inGapZ2 && Abs(cy) <= traceW/2+eps);
+    onPortY = (Abs(cy) <= traceW/2+eps);
+    isP1s = (isZFaceP && inGapX1 && onPortY && Abs(cz - h) < 0.6);
+    isP2s = (isZFaceP && inGapX1 && onPortY && Abs(cz - (-gndT-traceT)) < 0.6);
     If (!onOuter && !isP1s && !isP2s) pec() += {gs}; EndIf
   EndFor
 EndFor
@@ -137,12 +137,11 @@ If (#p1() == 0 || #p2() == 0)
     xmin2=bb2(0); ymin2=bb2(1); zmin2=bb2(2); xmax2=bb2(3); ymax2=bb2(4); zmax2=bb2(5);
     cx2=(xmin2+xmax2)/2; cy2=(ymin2+ymax2)/2; cz2=(zmin2+zmax2)/2;
     dx2=xmax2-xmin2; dy2=ymax2-ymin2; dz2=zmax2-zmin2;
-    isY2 = (dy2 < 0.6);
+    isZ2p = (dz2 < 0.6);
     inGapX1b = (xmin2 >= traceL-0.5 && xmax2 <= traceL+gap+0.5);
-    inGapZ1b = (zmin2 >= h-0.5 && zmax2 <= h+traceT+0.5);
-    inGapZ2b = (zmin2 >= -gndT-traceT-0.5 && zmax2 <= -gndT+0.5);
-    isP1b = (isY2 && inGapX1b && inGapZ1b && Abs(cy2) <= traceW/2+0.5);
-    isP2b = (isY2 && inGapX1b && inGapZ2b && Abs(cy2) <= traceW/2+0.5);
+    onY2b = (Abs(cy2) <= traceW/2+0.5);
+    isP1b = (isZ2p && inGapX1b && onY2b && Abs(cz2 - h) < 0.6);
+    isP2b = (isZ2p && inGapX1b && onY2b && Abs(cz2 - (-gndT-traceT)) < 0.6);
     If (isP1b) p1() += {ss}; EndIf
     If (isP2b) p2() += {ss}; EndIf
   EndFor

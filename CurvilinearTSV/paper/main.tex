@@ -316,7 +316,7 @@ $S_{11}$ & $S_{21}$ & $S_{31}$ & $S_{41}$ \\
 
 \subsection{Palace Full-Wave Attempt (Not Yet Valid)}
 
-A box-based 2-port TSV model (\texttt{test/palace\_tsv\_2port\_v2.geo/.msh/.json}) was built with Si ($\varepsilon_r=11.7,\sigma=10$~S/m), SiO$_2$ ($\varepsilon_r=3.9$), Cu ($\sigma=5.8\times10^7$~S/m), PEC ground, absorbing boundary, and lumped ports. Palace v0.19.0 completed but produced non-physical results ($S_{11}\approx -0.005$~dB, $S_{21}\approx -336$~dB, error-indicator norm 0.916), indicating remaining port/topology/mesh issues. \textbf{This result is invalid and excluded from publication claims.}
+A box-based 2-port TSV model (\texttt{test/palace\_tsv\_2port\_v2.geo/.msh/.json}) was built with Si ($\varepsilon_r=11.7,\sigma=10$~S/m), SiO$_2$ ($\varepsilon_r=3.9$), Cu ($\sigma=5.8\times10^7$~S/m), PEC ground, absorbing boundary, and lumped ports. Multiple debug iterations fixed critical issues: PEC-on-material-interface tagging (all internal interfaces were wrongly PEC), bottom-gap misclassification as ground (shorting port 2), and port-surface placement. Palace v0.19.0 completes, but latest run remains non-physical ($S_{11}\approx -7.5\times10^{-5}$~dB, $S_{21}\approx -257$~dB, error-indicator norm 0.909), indicating remaining port-bridging/mesh-boundary issues. \textbf{Invalid; excluded from publication claims.}
 
 The earlier 4-port Palace run (\texttt{postpro\_tsv\_driven/}) is also invalid: mistagged port sidewalls, 93.5\% power loss in a lossless domain ($\sum|S_{i1}|^2=0.065$), $Z_{\mathrm{in}}\approx 84+3.2j\,\Omega$, error-indicator norm 0.871, no Si/SiO$_2$/loss/ground return.
 
