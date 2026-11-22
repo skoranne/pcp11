@@ -1,0 +1,22 @@
+{
+  "Problem": { "Type": "Driven", "Verbose": 1, "Output": "postpro_ms_edge" },
+  "Model": { "Mesh": "test_ms_edge.msh", "L0": 1.0e-6 },
+  "Domains": { "Materials": [
+    { "Attributes": [1], "Permittivity": 1.0, "Permeability": 1.0, "LossTan": 0.0 },
+    { "Attributes": [2], "Permittivity": 4.4, "Permeability": 1.0, "LossTan": 0.0 },
+    { "Attributes": [3], "Permittivity": 1.0, "Permeability": 1.0, "Conductivity": 5.8e7 },
+    { "Attributes": [4], "Permittivity": 1.0, "Permeability": 1.0, "Conductivity": 5.8e7 }
+  ]},
+  "Boundaries": {
+    "PEC": { "Attributes": [11] },
+    "Absorbing": { "Attributes": [10], "Order": 2 },
+    "LumpedPort": [
+      { "Index": 1, "R": 50.0, "Excitation": 1, "Attributes": [12], "Direction": "+Z" },
+      { "Index": 2, "R": 50.0, "Attributes": [13], "Direction": "+Z" }
+    ]
+  },
+  "Solver": { "Order": 1, "Device": "CPU",
+    "Driven": { "Samples": [ { "Type": "Point", "Freq": [1.0] } ] },
+    "Linear": { "Type": "Default", "KSPType": "GMRES", "Tol": 1.0e-6, "MaxIts": 200 }
+  }
+}

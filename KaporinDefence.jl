@@ -132,19 +132,29 @@ println("Randomized Kaporin (Matrix A Row-Rank Proxy):    ", round(kaporin_A, di
 println("Randomized Kaporin (Matrix B Column-Rank Proxy): ", round(kaporin_B, digits=4))
 println("Total Joint Subspace Regularization Value:       ", round(kaporin_A + kaporin_B, digits=4))
 
-eigvals = eigen(G_A).values           # sorted ascending
+eig_A = eigen(G_A).values           # sorted ascending
 println("Eigenvalues (first 5 / last 5): ",
-        round.(eigvals[1:5]; digits=4), "...",
-        round.(eigvals[end-4:end]; digits=4))
-println("Mean eigenvalue = ", mean(eigvals))
-println("Geometric mean  = ", exp(mean(log.(eigvals))))
-println("Condition (tr/geom) = ", mean(eigvals) / exp(mean(log.(eigvals))))
+        round.(eig_A[1:5]; digits=4), "...",
+        round.(eig_A[end-4:end]; digits=4))
+println("Mean eigenvalue = ", mean(eig_A))
+println("Geometric mean  = ", exp(mean(log.(eig_A))))
+println("Condition (tr/geom) = ", mean(eig_A) / exp(mean(log.(eig_A))))
 
 println("‖A‖_F = ", norm(A))
 println("‖A‖_2 = ", opnorm(A))
 
 kaporin_exact = exact_kaporin(G_A)
 println("Exact Kaporin (no Monte‑Carlo) = ", round(kaporin_exact; digits=6))
+
+# The PiSSA Gram matrices above are diagonal, so the estimator is trivially
+# exact there.  Check it on a non-diagonal, ill-conditioned SPD matrix too.
+let n = 64, rng = MersenneTwister(1)
+    Q = Matrix(qr(randn(rng, n, n)).Q)
+    G_test = Symmetric(Q * Diagonal(exp.(range(-3, 3; length=n))) * Q')
+    println("Non-diagonal test: exact = ", round(exact_kaporin(G_test); digits=4),
+            ", randomized (k=50, m=30) = ",
+            round(randomized_kaporin(G_test, 50, 30); digits=4))
+end
 """
 Instantiating Base Matrix Layer...
 Running PiSSA Factorization Engine...
@@ -169,8 +179,10 @@ Exact Kaporin (no Monte‑Carlo) = 6.0e-6
 # ------------------------------------------------------------
 # 1.  Keep adapters in BF16 (or FP8) – only the *Gram* is FP32
 # ------------------------------------------------------------
-A_fp = convert.(BFloat16, A)          # or Float8E4M3 if supported
-B_fp = convert.(BFloat16, B)
+# BFloat16 comes from BFloat16s.jl; fall back to Float16 if it is not loaded
+const AdapterFloat = @isdefined(BFloat16) ? BFloat16 : Float16
+A_fp = convert.(AdapterFloat, A)      # or Float8E4M3 if supported
+B_fp = convert.(AdapterFloat, B)
 
 # ------------------------------------------------------------
 # 2.  Build Gram matrices on‑the‑fly (GPU‑resident)
@@ -229,7 +241,8 @@ function kaporin_grad(M::AbstractMatrix{T}, ε::Real) where {T}
     G = Symmetric(M * M' + ε * I)
     invG = inv(G)
     trG = tr(G)
-    return (2.0 / r) * (M / trG .- invG * M)
+    # d/dM [ log(tr(G)/r) - logdet(G)/r ]  with  G = M*M' + ε*I
+    return 2.0 * (M / trG .- (invG * M) / r)
 end
 
 Zygote.@adjoint function kaporin_proxy(M::AbstractMatrix{T}, ε::Real) where {T}
@@ -255,7 +268,7 @@ end
 function simulate_rka(; d_out=128, d_in=64, r=8, batch=32,
                      noise_std=0.01, opt=:adam, η=1e-2,
                      β1=0.9, β2=0.999, λ=0.0, ε=1e-4,
-                     steps=500, seed=42, record_every=5)
+                     steps=500, seed=42, record_every=5, r_true=r)
 
     rng = MersenneTwister(seed)
 
@@ -264,7 +277,12 @@ function simulate_rka(; d_out=128, d_in=64, r=8, batch=32,
 
     # a single mini‑batch we reuse (synthetic regression)
     X = randn(rng, batch, d_in)
-    Y = X * W0' .+ noise_std * randn(rng, batch, d_out)
+    XW0 = X * W0'                        # frozen base-model output (constant)
+
+    # ground-truth rank-`r_true` update that the adapter has to learn
+    B_true = randn(rng, d_out, r_true) / sqrt(r_true)
+    A_true = randn(rng, r_true, d_in) / sqrt(d_in)
+    Y = XW0 .+ (X * A_true') * B_true' .+ noise_std * randn(rng, batch, d_out)
 
     # low‑rank factors (tiny random init)
     A = randn(rng, r, d_in) * 0.01
@@ -286,12 +304,12 @@ function simulate_rka(; d_out=128, d_in=64, r=8, batch=32,
     # loss + auxiliary metrics (closure for Zygote)
     # ----------------------------------------------------------
     function loss_and_metrics(A_, B_)
-        ΔW = B_ * A_                     # low‑rank update
-        Ŷ  = X * (W0 .+ ΔW)'             # predictions (batch × d_out)
+        # X*(W0 + B*A)' without forming the d_out × d_in update
+        Ŷ  = XW0 .+ (X * A_') * B_'      # predictions (batch × d_out)
         mse = sum(abs2, Ŷ .- Y) / batch
         kapA = kaporin_proxy(A_, ε)      # row‑wise Gram
         kapB = kaporin_proxy(B_', ε)     # column‑wise Gram (B' is r×d_out)
-        total = mse - λ * (kapA + kapB)
+        total = mse + λ * (kapA + kapB)
         return total, (mse, kapA, kapB)
     end
 
@@ -347,7 +365,7 @@ function simulate_rka(; d_out=128, d_in=64, r=8, batch=32,
         :erB    => erB_hist,
         :A_final=> copy(A),
         :B_final=> copy(B),
-        :settings=> (d_out=d_out, d_in=d_in, r=r,
+        :settings=> (d_out=d_out, d_in=d_in, r=r, r_true=r_true,
                     λ=λ, ε=ε, η=η, opt=opt, steps=steps)
     )
 end
@@ -362,33 +380,47 @@ end
 # 5️⃣ Simple visualisation (requires Plots.jl)
 # --------------------------------------------------------------
 function plot_trajectories(no, yes; title_suffix="")
+    lam = "λ=$(yes[:settings].λ)"
     p1 = plot(no[:loss], label="no‑reg", lw=2,
               xlabel="record step", ylabel="total loss",
               title="Training loss $title_suffix")
-    plot!(p1, yes[:loss], label="Kaporin λ=0.1", lw=2, ls=:dash)
+    plot!(p1, yes[:loss], label="Kaporin $lam", lw=2, ls=:dash)
 
     p2 = plot(no[:kapA], label="kapA (no‑reg)", lw=2,
               xlabel="record step", ylabel="Kaporin proxy",
               title="Kaporin A‑side $title_suffix")
-    plot!(p2, yes[:kapA], label="kapA (λ=0.1)", lw=2, ls=:dash)
+    plot!(p2, yes[:kapA], label="kapA ($lam)", lw=2, ls=:dash)
 
     p3 = plot(no[:kapB], label="kapB (no‑reg)", lw=2,
               xlabel="record step", ylabel="Kaporin proxy",
               title="Kaporin B‑side $title_suffix")
-    plot!(p3, yes[:kapB], label="kapB (λ=0.1)", lw=2, ls=:dash)
+    plot!(p3, yes[:kapB], label="kapB ($lam)", lw=2, ls=:dash)
 
     p4 = plot(no[:erA], label="eff‑rank A (no‑reg)", lw=2,
               xlabel="record step", ylabel="effective rank",
               title="Effective rank of A $title_suffix")
-    plot!(p4, yes[:erA], label="eff‑rank A (λ=0.1)", lw=2, ls=:dash)
+    plot!(p4, yes[:erA], label="eff‑rank A ($lam)", lw=2, ls=:dash)
 
     p5 = plot(no[:erB], label="eff‑rank B (no‑reg)", lw=2,
               xlabel="record step", ylabel="effective rank",
               title="Effective rank of B $title_suffix")
-    plot!(p5, yes[:erB], label="eff‑rank B (λ=0.1)", lw=2, ls=:dash)
+    plot!(p5, yes[:erB], label="eff‑rank B ($lam)", lw=2, ls=:dash)
 
     plot(p1, p2, p3, p4, p5; layout=(3,2), size=(960,800),
          legend=:bottomright)
 end
 
-plot_trajectories(res_no, res_reg, title_suffix="(r=8, Adam)")
+plt = plot_trajectories(res_no, res_reg,
+                        title_suffix="(r=$(res_reg[:settings].r), Adam)")
+# Set KAPORIN_FIG to choose where the figure is written
+fig_path = get(ENV, "KAPORIN_FIG", joinpath(@__DIR__, "KAPORIN.png"))
+savefig(plt, fig_path)
+println("Figure written to ", fig_path)
+for (name, res) in (("no-reg", res_no), ("Kaporin", res_reg))
+    println(name, ": final loss = ", round(res[:loss][end]; digits=4),
+            ", kapA = ", round(res[:kapA][end]; digits=4),
+            ", kapB = ", round(res[:kapB][end]; digits=4),
+            ", eff-rank A = ", round(res[:erA][end]; digits=3),
+            ", eff-rank B = ", round(res[:erB][end]; digits=3))
+end
+display(plt)
